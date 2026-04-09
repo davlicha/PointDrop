@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum TransactionType {
+  EARN
+  REDEEM
+  TRANSFER
+}
+
+model User {
+  id                   String        @id @default(uuid()) @db.Uuid
+  phone                String        @unique @db.VarChar(20)
+  email                String?       @unique @db.VarChar(255)
+  passwordHash         String        @map("password_hash") @db.VarChar(255)
+  name                 String        @db.VarChar(100)
+  role                 Role          @default(CUSTOMER)
+  createdAt            DateTime      @default(now()) @map("created_at")
+
+  managedMerchants     Merchant[]    @relation("MerchantAdmin")
+  balances             Balance[]
+  sentTransactions     Transaction[] @relation("SentTransactions")
+  receivedTransactions Transaction[] @relation("ReceivedTransactions")
+
+  @@map("users")
+}
+
+model Merchant {
+  id           String        @id @default(uuid()) @db.Uuid
+  name         String        @db.VarChar(255)
+  cashbackRate Float         @map("cashback_rate") @db.Real
+  adminId      String        @map("admin_id") @db.Uuid
+
+  admin        User          @relation("MerchantAdmin", fields: [adminId], references: [id], onDelete: Restrict)
+  balances     Balance[]
+  transactions Transaction[]
+
+  @@map("merchants")
+}
+
+model Balance {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  merchantId   String   @map("merchant_id") @db.Uuid
+  pointsAmount Int      @default(0) @map("points_amount")
+  qrPayload    String?  @unique @map("qr_payload") @db.VarChar(255)
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  merchant     Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, merchantId])
+  @@index([qrPayload])
+  @@map("balances")
+}
+
+model Transaction {
+  id         String          @id @default(uuid()) @db.Uuid
+  type       TransactionType
+  amount     Int
+  merchantId String          @map("merchant_id") @db.Uuid
+  senderId   String?         @map("sender_id") @db.Uuid
+  receiverId String          @map("receiver_id") @db.Uuid
+  timestamp  DateTime        @default(now())
+
+  merchant Merchant @relation(fields: [merchantId], references: [id], onDelete: Restrict)
+  sender   User?    @relation("SentTransactions", fields: [senderId], references: [id], onDelete: SetNull)
+  receiver User     @relation("ReceivedTransactions", fields: [receiverId], references: [id], onDelete: Restrict)
+
+  @@index([merchantId, timestamp])
+  @@index([receiverId])
+  @@map("transactions")
+}
