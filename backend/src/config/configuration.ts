@@ -4,6 +4,8 @@ export interface AppConfig {
   corsOrigin: string;
   swaggerPath: string;
   databaseUrl: string;
+  jwtSecret: string;
+  jwtExpiresIn: string;
 }
 
 export default (): AppConfig => ({
@@ -12,4 +14,6 @@ export default (): AppConfig => ({
   corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
   swaggerPath: process.env.SWAGGER_PATH ?? 'api/docs',
   databaseUrl: process.env.DATABASE_URL ?? '',
+  jwtSecret: process.env.JWT_SECRET ?? 'change-me-in-production',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '1d',
 });
