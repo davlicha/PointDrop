@@ -1,9 +1,26 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import MainLayout from './layouts/MainLayout';
 import MainApp from './pages/MainApp';
+import LoginPage from './pages/LoginPage';
 import TransactionTable from './components/TransactionTable';
 import { checkHealth } from './services/healthService';
+import { AuthProvider, useAuth } from './hooks/useAuth';
+
+// Захищений роут
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return <div style={{ color: '#fff', padding: '20px' }}>Завантаження...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
 
 // Сторінка історії транзакцій
 function TransactionsPage() {
@@ -44,16 +61,12 @@ function TransactionsPage() {
   );
 }
 
-// Стилі сторінки транзакцій
 const transactionsPageStyles = {
-  // Центрування сторінки
   wrapper: {
     display: 'flex',
     justifyContent: 'center',
     width: '100%',
   },
-
-  // Контейнер у стилі мобільного екрана
   phone: {
     width: '390px',
     minHeight: '844px',
@@ -62,8 +75,6 @@ const transactionsPageStyles = {
     boxSizing: 'border-box',
     color: '#FFFFFF',
   },
-
-  // Заголовок сторінки
   title: {
     margin: '0 0 20px 0',
     fontSize: '20px',
@@ -71,15 +82,12 @@ const transactionsPageStyles = {
   },
 };
 
-// Головний компонент додатку
-function App() {
-  // Текст статусу бекенду
+// Внутрішній компонент додатку
+function AppContent() {
   const [backendStatus, setBackendStatus] = useState('Перевірка...');
-
-  // Ознака доступності бекенду
   const [backendOk, setBackendOk] = useState(false);
+  const { isAuthenticated } = useAuth();
 
-  // Перевірка бекенду після завантаження
   useEffect(() => {
     async function loadBackendStatus() {
       try {
@@ -96,13 +104,48 @@ function App() {
   }, []);
 
   return (
+    <Routes>
+      <Route
+        path="/login"
+        element={
+          isAuthenticated ? <Navigate to="/" replace /> : (
+            <MainLayout backendStatus={backendStatus} backendOk={backendOk}>
+              <LoginPage />
+            </MainLayout>
+          )
+        }
+      />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <MainLayout backendStatus={backendStatus} backendOk={backendOk}>
+              <MainApp />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/transactions"
+        element={
+          <ProtectedRoute>
+            <MainLayout backendStatus={backendStatus} backendOk={backendOk}>
+              <TransactionsPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
+  );
+}
+
+// Головний компонент
+function App() {
+  return (
     <BrowserRouter>
-      <MainLayout backendStatus={backendStatus} backendOk={backendOk}>
-        <Routes>
-          <Route path="/" element={<MainApp />} />
-          <Route path="/transactions" element={<TransactionsPage />} />
-        </Routes>
-      </MainLayout>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </BrowserRouter>
   );
 }
