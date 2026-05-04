@@ -33,10 +33,14 @@ RUN apk add --no-cache openssl tini \
     && addgroup -S nodejs \
     && adduser -S nestjs -G nodejs
 
+COPY --from=builder --chown=nestjs:nodejs /app/src ./src
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nestjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nestjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nestjs:nodejs /app/package*.json ./
+COPY jest.config.js ./
+COPY tsconfig.json ./
+COPY src/ ./src/
 
 USER nestjs
 

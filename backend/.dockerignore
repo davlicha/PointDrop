@@ -11,5 +11,4 @@ coverage
 openapi.json
 .vscode
 .idea
-**/*.spec.ts
 test
