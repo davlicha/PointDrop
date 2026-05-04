@@ -37,6 +37,7 @@ async function bootstrap(): Promise<void> {
 
   app.useGlobalFilters(new GlobalExceptionFilter());
   app.useGlobalInterceptors(new LoggingInterceptor());
+  app.setGlobalPrefix('api/v1');
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('PointDrop API')
