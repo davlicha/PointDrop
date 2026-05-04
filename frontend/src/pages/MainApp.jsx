@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import TransactionTable from '../components/TransactionTable.jsx';
 import QRCodeDisplay from '../components/QRCodeDisplay';
 import { checkHealth } from '../services/healthService';
+import { transferPoints } from '../services/transactionService';
+import { useAuth } from '../hooks/useAuth';
+import { getQrPayload } from '../services/authService';
 
 // Головний компонент додатка
 function App() {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   // Поточний екран
   const [screen, setScreen] = useState('main');
 
@@ -58,13 +64,20 @@ function App() {
   const renderScreen = () => {
     switch (screen) {
       case 'main':
-        return <MainScreen setScreen={setScreen} transactions={transactions} />;
+        return (
+          <MainScreen
+            setScreen={setScreen}
+            transactions={transactions}
+            backendError={error}
+            backendHealth={health}
+          />
+        );
       case 'qr':
         return <QRScreen setScreen={setScreen} />;
       case 'scan':
         return <ScanScreen setScreen={setScreen} />;
       case 'profile':
-        return <ProfileScreen setScreen={setScreen} />;
+        return <ProfileScreen setScreen={setScreen} navigate={navigate} logout={logout} />;
       case 'intro':
         return <IntroScreen setScreen={setScreen} />;
       case 'success':
@@ -74,7 +87,14 @@ function App() {
       case 'menu':
         return <MenuScreen setScreen={setScreen} transactions={transactions} />;
       default:
-        return <MainScreen setScreen={setScreen} transactions={transactions} />;
+        return (
+          <MainScreen
+            setScreen={setScreen}
+            transactions={transactions}
+            backendError={error}
+            backendHealth={health}
+          />
+        );
     }
   };
 
@@ -82,7 +102,45 @@ function App() {
 }
 
 // Головний екран
-function MainScreen({ setScreen, transactions }) {
+function MainScreen({ setScreen, transactions, backendError, backendHealth }) {
+  const { user } = useAuth();
+  const [receiverPhone, setReceiverPhone] = useState('');
+  const [amount, setAmount] = useState('');
+  const [transferStatus, setTransferStatus] = useState('');
+  const [isTransferLoading, setIsTransferLoading] = useState(false);
+
+  async function handleTransfer() {
+    setTransferStatus('');
+
+    if (!receiverPhone.trim() || !amount) {
+      setTransferStatus('Введіть телефон отримувача та кількість балів');
+      return;
+    }
+
+    try {
+      setIsTransferLoading(true);
+
+      await transferPoints({
+        receiverPhone: receiverPhone.trim(),
+        amount,
+      });
+
+      setTransferStatus('Переказ успішно виконано');
+      setReceiverPhone('');
+      setAmount('');
+      setScreen('success');
+    } catch (err) {
+      const message =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        'Не вдалося виконати переказ';
+
+      setTransferStatus(Array.isArray(message) ? message.join(', ') : message);
+    } finally {
+      setIsTransferLoading(false);
+    }
+  }
+
   return (
     <section style={styles.phone}>
       <Header
@@ -96,11 +154,11 @@ function MainScreen({ setScreen, transactions }) {
       <div style={styles.balanceCard}>
         <div style={styles.balanceLeft}>
           <span style={styles.star}>✦</span>
-          <p style={styles.greeting}>Привіт, Анна!</p>
+          <p style={styles.greeting}>Привіт, {user?.name?.split(' ')[0] || 'Користувачу'}!</p>
         </div>
 
         <div style={styles.balanceRight}>
-          <p style={styles.balanceText}>Баланс: 1000 балів</p>
+          <p style={styles.balanceText}>Баланс: 0 балів</p>
           <span style={styles.cardMini}>▭</span>
         </div>
       </div>
@@ -108,16 +166,38 @@ function MainScreen({ setScreen, transactions }) {
       <div style={styles.transferCard}>
         <h2 style={styles.sectionTitle}>Переказати бали</h2>
 
+        {backendError && <p style={styles.errorNotice}>{backendError}</p>}
+        {backendHealth && !backendError && (
+          <p style={styles.successNotice}>Бекенд підключено</p>
+        )}
+
         <div style={styles.transferRow}>
           <div style={styles.inputsColumn}>
-            <input style={styles.input} placeholder="Номер або нік" />
-            <input style={styles.input} placeholder="Кількість" />
+            <input
+              style={styles.input}
+              placeholder="Телефон отримувача, напр. +380501110002"
+              value={receiverPhone}
+              onChange={(event) => setReceiverPhone(event.target.value)}
+            />
+            <input
+              style={styles.input}
+              placeholder="Кількість"
+              type="number"
+              min="1"
+              value={amount}
+              onChange={(event) => setAmount(event.target.value)}
+            />
             <button
               style={styles.greenButton}
-              onClick={() => setScreen('intro')}
+              onClick={handleTransfer}
+              disabled={isTransferLoading}
             >
-              Переказати
+              {isTransferLoading ? 'Переказ...' : 'Переказати'}
             </button>
+
+            {transferStatus && (
+              <p style={styles.transferStatus}>{transferStatus}</p>
+            )}
           </div>
 
           <div style={styles.qrColumn}>
@@ -138,6 +218,28 @@ function MainScreen({ setScreen, transactions }) {
 
 // Екран QR
 function QRScreen({ setScreen }) {
+  const { user } = useAuth();
+  const [qrData, setQrData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function fetchQrData() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getQrPayload();
+        setQrData(data);
+      } catch (err) {
+        console.error('Failed to fetch QR data:', err);
+        setError('Не вдалося завантажити QR-код');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchQrData();
+  }, []);
+
   return (
     <section style={styles.phone}>
       <Header
@@ -148,14 +250,27 @@ function QRScreen({ setScreen }) {
       />
 
       <div style={styles.centerBlock}>
-        <div style={styles.bigQrBox}>
-          <QRCodeDisplay value="anna-1000" />
-        </div>
+        {loading ? (
+          <div style={styles.infoCard}>
+            <p style={styles.infoText}>Завантаження...</p>
+          </div>
+        ) : error ? (
+          <div style={styles.infoCard}>
+            <p style={styles.infoText}>{error}</p>
+          </div>
+        ) : (
+          <>
+            <div style={styles.bigQrBox}>
+              <QRCodeDisplay value={qrData?.qr_payload} size={200} />
+            </div>
 
-        <div style={styles.infoCard}>
-          <p style={styles.infoText}>Клієнт: Корніївська Анна Сергіївна</p>
-          <p style={styles.infoText}>Баланс: 1000 балів</p>
-        </div>
+            <div style={styles.infoCard}>
+              <p style={styles.infoText}>Клієнт: {user?.name || 'Невідомо'}</p>
+              <p style={styles.infoText}>Телефон: {user?.phone || 'Невідомо'}</p>
+              <p style={styles.infoText}>ID: {user?.id?.substring(0, 8) || 'Невідомо'}</p>
+            </div>
+          </>
+        )}
 
         <button
           style={styles.greenButtonWide}
@@ -213,7 +328,15 @@ function ScanScreen({ setScreen }) {
 }
 
 // Екран профілю
-function ProfileScreen({ setScreen }) {
+function ProfileScreen({ setScreen, navigate, logout }) {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      setLoading(false);
+    }
+  }, [user]);
   return (
     <section style={styles.phone}>
       <Header
@@ -231,16 +354,33 @@ function ProfileScreen({ setScreen }) {
       <div style={styles.profileBalance}>Поточний баланс: 1000</div>
 
       <div style={styles.profileCard}>
-        <p style={styles.profileText}>Ім'я: Корніївська Анна Сергіївна</p>
-        <p style={styles.profileText}>Нік: @anna_0</p>
-        <p style={styles.profileText}>Вік: 25 років</p>
-        <p style={styles.profileText}>Дата народження: 02.07.2001</p>
-        <p style={styles.profileText}>Телефон: +3809556289</p>
-        <p style={styles.profileText}>E-mail: anna.kor123@gmail.com</p>
+        {loading ? (
+          <p style={styles.profileText}>Завантаження...</p>
+        ) : (
+          <>
+            <p style={styles.profileText}>Ім'я: {user?.name || 'Невідомо'}</p>
+            <p style={styles.profileText}>Нік: @{user?.id?.substring(0, 8) || 'Невідомо'}</p>
+            <p style={styles.profileText}>Телефон: {user?.phone || 'Невідомо'}</p>
+            <p style={styles.profileText}>E-mail: {user?.email || 'Невідомо'}</p>
+            {user?.createdAt && (
+              <p style={styles.profileText}>
+                Опікун: {new Date(user.createdAt).toLocaleDateString('uk-UA')}
+              </p>
+            )}
+          </>
+        )}
       </div>
 
       <div style={styles.bottomButtons}>
-        <button style={styles.redButtonWide}>Вийти</button>
+        <button
+          style={styles.redButtonWide}
+          onClick={() => {
+            logout();
+            navigate('/login');
+          }}
+        >
+          Вийти
+        </button>
         <button
           style={styles.greenButtonWide}
           onClick={() => setScreen('main')}
@@ -626,6 +766,25 @@ const styles = {
     borderRadius: '18px',
     padding: '14px',
     marginBottom: '20px',
+  },
+
+  transferStatus: {
+    margin: '10px 0 0 0',
+    fontSize: '11px',
+    color: '#FFFFFF',
+    lineHeight: '15px',
+  },
+
+  successNotice: {
+    margin: '0 0 10px 0',
+    color: '#B4E28E',
+    fontSize: '11px',
+  },
+
+  errorNotice: {
+    margin: '0 0 10px 0',
+    color: '#FFB4B4',
+    fontSize: '11px',
   },
 
   // Заголовок секції
