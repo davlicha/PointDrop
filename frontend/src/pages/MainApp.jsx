@@ -33,32 +33,14 @@ function App() {
   }, []);
 
   // Дані транзакцій
-  const transactions = [
-    {
-      id: 1,
-      amount: '+100',
-      name: 'Наталі',
-      time: '5 хвилин тому',
-      status: 'Отримано',
-      color: '#2E7D32',
-    },
-    {
-      id: 2,
-      amount: '-50',
-      name: 'Ліза',
-      time: '1 година тому',
-      status: 'Переказано',
-      color: '#8B2E2E',
-    },
-    {
-      id: 3,
-      amount: '+200',
-      name: 'Антон',
-      time: '5 годин тому',
-      status: 'Отримано',
-      color: '#2E7D32',
-    },
-  ];
+  // Список транзакцій
+  const [transactions, setTransactions] = useState([]);
+
+  // Завантаження транзакцій
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
+
+  // Помилка транзакцій
+  const [transactionsError, setTransactionsError] = useState('');
 
   // Відкриває потрібний екран
   const renderScreen = () => {
@@ -68,6 +50,8 @@ function App() {
           <MainScreen
             setScreen={setScreen}
             transactions={transactions}
+            transactionsLoading={transactionsLoading}
+            transactionsError={transactionsError}
             backendError={error}
             backendHealth={health}
           />
@@ -77,7 +61,13 @@ function App() {
       case 'scan':
         return <ScanScreen setScreen={setScreen} />;
       case 'profile':
-        return <ProfileScreen setScreen={setScreen} navigate={navigate} logout={logout} />;
+        return (
+          <ProfileScreen
+            setScreen={setScreen}
+            navigate={navigate}
+            logout={logout}
+          />
+        );
       case 'intro':
         return <IntroScreen setScreen={setScreen} />;
       case 'success':
@@ -91,6 +81,8 @@ function App() {
           <MainScreen
             setScreen={setScreen}
             transactions={transactions}
+            transactionsLoading={transactionsLoading}
+            transactionsError={transactionsError}
             backendError={error}
             backendHealth={health}
           />
@@ -102,7 +94,14 @@ function App() {
 }
 
 // Головний екран
-function MainScreen({ setScreen, transactions, backendError, backendHealth }) {
+function MainScreen({
+  setScreen,
+  transactions,
+  transactionsLoading,
+  transactionsError,
+  backendError,
+  backendHealth,
+}) {
   const { user } = useAuth();
   const [receiverPhone, setReceiverPhone] = useState('');
   const [amount, setAmount] = useState('');
@@ -154,7 +153,9 @@ function MainScreen({ setScreen, transactions, backendError, backendHealth }) {
       <div style={styles.balanceCard}>
         <div style={styles.balanceLeft}>
           <span style={styles.star}>✦</span>
-          <p style={styles.greeting}>Привіт, {user?.name?.split(' ')[0] || 'Користувачу'}!</p>
+          <p style={styles.greeting}>
+            Привіт, {user?.name?.split(' ')[0] || 'Користувачу'}!
+          </p>
         </div>
 
         <div style={styles.balanceRight}>
@@ -211,7 +212,17 @@ function MainScreen({ setScreen, transactions, backendError, backendHealth }) {
 
       <h3 style={styles.transactionsTitle}>Останні транзакції</h3>
 
-      <TransactionTable transactions={transactions} />
+      {transactionsLoading && (
+        <p style={styles.infoTextWhite}>Завантаження транзакцій...</p>
+      )}
+
+      {transactionsError && (
+        <p style={styles.errorNotice}>{transactionsError}</p>
+      )}
+
+      {!transactionsLoading && !transactionsError && (
+        <TransactionTable transactions={transactions} />
+      )}
     </section>
   );
 }
@@ -266,8 +277,12 @@ function QRScreen({ setScreen }) {
 
             <div style={styles.infoCard}>
               <p style={styles.infoText}>Клієнт: {user?.name || 'Невідомо'}</p>
-              <p style={styles.infoText}>Телефон: {user?.phone || 'Невідомо'}</p>
-              <p style={styles.infoText}>ID: {user?.id?.substring(0, 8) || 'Невідомо'}</p>
+              <p style={styles.infoText}>
+                Телефон: {user?.phone || 'Невідомо'}
+              </p>
+              <p style={styles.infoText}>
+                ID: {user?.id?.substring(0, 8) || 'Невідомо'}
+              </p>
             </div>
           </>
         )}
@@ -359,9 +374,15 @@ function ProfileScreen({ setScreen, navigate, logout }) {
         ) : (
           <>
             <p style={styles.profileText}>Ім'я: {user?.name || 'Невідомо'}</p>
-            <p style={styles.profileText}>Нік: @{user?.id?.substring(0, 8) || 'Невідомо'}</p>
-            <p style={styles.profileText}>Телефон: {user?.phone || 'Невідомо'}</p>
-            <p style={styles.profileText}>E-mail: {user?.email || 'Невідомо'}</p>
+            <p style={styles.profileText}>
+              Нік: @{user?.id?.substring(0, 8) || 'Невідомо'}
+            </p>
+            <p style={styles.profileText}>
+              Телефон: {user?.phone || 'Невідомо'}
+            </p>
+            <p style={styles.profileText}>
+              E-mail: {user?.email || 'Невідомо'}
+            </p>
             {user?.createdAt && (
               <p style={styles.profileText}>
                 Опікун: {new Date(user.createdAt).toLocaleDateString('uk-UA')}
@@ -628,6 +649,11 @@ function FakeQR() {
 }
 
 const styles = {
+  infoTextWhite: {
+    margin: '0 0 12px 0',
+    color: '#FFFFFF',
+    fontSize: '12px',
+  },
   // Фон сторінки
   page: {
     width: 'fit-content',
