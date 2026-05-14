@@ -34,13 +34,9 @@ function App() {
 
   // Дані транзакцій
   // Список транзакцій
-  const [transactions, setTransactions] = useState([]);
-
-  // Завантаження транзакцій
-  const [transactionsLoading, setTransactionsLoading] = useState(false);
-
-  // Помилка транзакцій
-  const [transactionsError, setTransactionsError] = useState('');
+  const [transactions] = useState([]);
+  const [transactionsLoading] = useState(false);
+  const [transactionsError] = useState('');
 
   // Відкриває потрібний екран
   const renderScreen = () => {
