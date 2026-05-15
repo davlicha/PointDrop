@@ -9,7 +9,7 @@ RUN apk add --no-cache libc6-compat openssl
 COPY package*.json ./
 COPY prisma ./prisma
 
-RUN npm ci
+RUN npm install
 
 # ========== builder ==========
 FROM node:20-alpine AS builder
@@ -38,8 +38,6 @@ COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nestjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nestjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nestjs:nodejs /app/package*.json ./
-COPY tsconfig.json ./
-COPY src/ ./src/
 
 USER nestjs
 

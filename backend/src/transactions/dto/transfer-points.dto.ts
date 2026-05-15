@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsString, IsUUID, Matches, Min } from 'class-validator';
+import { IsInt, IsOptional, IsString, IsUUID, Matches, Min } from 'class-validator';
 
 export class TransferPointsDto {
   @ApiProperty({
@@ -11,14 +11,26 @@ export class TransferPointsDto {
   senderId!: string;
 
   @ApiProperty({
-    description: 'Номер телефону отримувача у форматі E.164',
+    description: 'Номер телефону отримувача у форматі E.164 (опціонально, якщо є receiverId)',
     example: '+380501110002',
+    required: false,
   })
+  @IsOptional()
   @IsString()
   @Matches(/^\+?\d{10,15}$/, {
     message: 'receiverPhone must be E.164-like (e.g. +380501110002)',
   })
-  receiverPhone!: string;
+  receiverPhone?: string;
+
+  @ApiProperty({
+    description: 'UUID отримувача (опціонально, якщо є receiverPhone)',
+    format: 'uuid',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID('4', { message: 'receiverId must be a valid UUID' })
+  receiverId?: string;
 
   @ApiProperty({
     description: 'UUID закладу, у межах якого відбувається переказ',
