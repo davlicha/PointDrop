@@ -1,47 +1,59 @@
 import { useMemo, useState } from 'react';
 
-function TransactionTable({ transactions }) {
+// Таблиця транзакцій
+function TransactionTable({ transactions = [] }) {
   // Поточна сторінка
   const [currentPage, setCurrentPage] = useState(1);
 
-  // К-сть елементів на сторінці
+  // Кількість елементів на сторінці
   const itemsPerPage = 2;
 
-  // Загальна к-сть сторінок
-  const totalPages = Math.ceil(transactions.length / itemsPerPage);
+  // Загальна кількість сторінок
+  const totalPages = Math.max(1, Math.ceil(transactions.length / itemsPerPage));
 
   // Дані для поточної сторінки
   const currentTransactions = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage; // початок
-    const endIndex = startIndex + itemsPerPage; // кінець
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
 
-    return transactions.slice(startIndex, endIndex); // вирізаємо частину
+    return transactions.slice(startIndex, endIndex);
   }, [transactions, currentPage]);
 
-  // Попередня сторінка
+  // Перехід назад
   function handlePrevPage() {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
     }
   }
 
-  // Наступна сторінка
+  // Перехід вперед
   function handleNextPage() {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
     }
   }
 
+  // Якщо транзакцій немає
+  if (transactions.length === 0) {
+    return (
+      <div style={styles.emptyState}>
+        <p style={styles.emptyTitle}>Транзакцій поки немає</p>
+        <p style={styles.emptyText}>
+          Після переказів або нарахувань вони з’являться тут.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
+      {/* Список транзакцій */}
       <div style={styles.transactionsList}>
         {currentTransactions.map((item) => (
           <div key={item.id} style={styles.transactionCard}>
-            
-            
+            {/* Верх картки */}
             <div style={styles.transactionTop}>
-              
-              
+              {/* Сума та ім’я */}
               <div style={styles.transactionLeft}>
                 <span
                   style={{
@@ -49,7 +61,7 @@ function TransactionTable({ transactions }) {
                     color: item.color,
                   }}
                 >
-                  {item.amount} 
+                  {item.amount}
                 </span>
 
                 <span
@@ -58,40 +70,29 @@ function TransactionTable({ transactions }) {
                     color: item.color,
                   }}
                 >
-                  ▭ 
+                  ▭
                 </span>
 
-                <span style={styles.personName}>
-                  {item.name} 
-                </span>
+                <span style={styles.personName}>{item.name}</span>
               </div>
 
-              
+              {/* Час */}
               <div style={styles.transactionRight}>
-                <span style={styles.timeText}>
-                  {item.time} 
-                </span>
+                <span style={styles.timeText}>{item.time}</span>
               </div>
             </div>
 
-            
+            {/* Низ картки */}
             <div style={styles.transactionBottom}>
-              <span style={styles.statusText}>
-                {item.status} 
-              </span>
-
-              <span style={styles.arrow}>
-                {'>'} 
-              </span>
+              <span style={styles.statusText}>{item.status}</span>
+              <span style={styles.arrow}>{'>'}</span>
             </div>
           </div>
         ))}
       </div>
 
-     
+      {/* Пагінація */}
       <div style={styles.pagination}>
-        
-       
         <button
           style={{
             ...styles.pageButton,
@@ -104,12 +105,10 @@ function TransactionTable({ transactions }) {
           Назад
         </button>
 
-        
         <span style={styles.pageInfo}>
           Сторінка {currentPage} з {totalPages}
         </span>
 
-       
         <button
           style={{
             ...styles.pageButton,
@@ -168,18 +167,18 @@ const styles = {
     fontWeight: '700',
   },
 
-  // Маленька іконка
+  // Іконка картки
   cardMini: {
     fontSize: '15px',
   },
 
-  // Ім’я
+  // Ім’я користувача
   personName: {
     fontSize: '12px',
     color: '#111111',
   },
 
-  // Дата і час
+  // Час операції
   timeText: {
     fontSize: '11px',
     color: '#111111',
@@ -193,7 +192,7 @@ const styles = {
     alignItems: 'center',
   },
 
-  // Статус
+  // Статус транзакції
   statusText: {
     fontSize: '11px',
     color: '#111111',
@@ -225,10 +224,35 @@ const styles = {
     fontSize: '12px',
   },
 
-  // Текст сторінки
+  // Інформація про сторінку
   pageInfo: {
     color: '#FFFFFF',
     fontSize: '12px',
+  },
+
+  // Порожній стан
+  emptyState: {
+    background: '#1A1A1D',
+    border: '1px solid #3A3A3A',
+    borderRadius: '16px',
+    padding: '18px',
+    textAlign: 'center',
+  },
+
+  // Заголовок порожнього стану
+  emptyTitle: {
+    color: '#FFFFFF',
+    fontSize: '14px',
+    fontWeight: '700',
+    margin: '0 0 8px',
+  },
+
+  // Опис порожнього стану
+  emptyText: {
+    color: '#AAAAAA',
+    fontSize: '12px',
+    margin: 0,
+    lineHeight: '18px',
   },
 };
 
