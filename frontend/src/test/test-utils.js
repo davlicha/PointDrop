@@ -2,19 +2,15 @@
  * Test utilities and helpers for frontend tests
  */
 
-import { render as rtlRender, RenderOptions } from '@testing-library/react';
-import { ReactElement } from 'react';
+import { render as rtlRender } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '../../hooks/useAuth';
 
 /**
  * Custom render function that includes common providers
  */
-export function render(
-  ui: ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>,
-) {
-  function Wrapper({ children }: { children: ReactElement }) {
+export function render(ui, options) {
+  function Wrapper({ children }) {
     return (
       <BrowserRouter>
         <AuthProvider>{children}</AuthProvider>
@@ -28,7 +24,7 @@ export function render(
 /**
  * Mock API response generator
  */
-export const generateMockResponse = (data: any, status = 200) => ({
+export const generateMockResponse = (data, status = 200) => ({
   data,
   status,
   statusText: 'OK',
@@ -65,14 +61,14 @@ export const generateMockQrPayload = () =>
  * Setup localStorage mock
  */
 export const setupLocalStorage = () => {
-  const store: Record<string, string> = {};
+  const store = {};
 
   const mockLocalStorage = {
-    getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => {
+    getItem: (key) => store[key] || null,
+    setItem: (key, value) => {
       store[key] = value.toString();
     },
-    removeItem: (key: string) => {
+    removeItem: (key) => {
       delete store[key];
     },
     clear: () => {
@@ -90,10 +86,7 @@ export const setupLocalStorage = () => {
 /**
  * Wait for element with timeout
  */
-export const waitForElement = async (
-  callback: () => HTMLElement | null,
-  timeout = 3000,
-) => {
+export const waitForElement = async (callback, timeout = 3000) => {
   const startTime = Date.now();
 
   while (Date.now() - startTime < timeout) {
