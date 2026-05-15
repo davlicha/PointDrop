@@ -122,6 +122,19 @@ export class AuthService {
         phone: true,
         role: true,
         createdAt: true,
+        balances: {
+          select: {
+            merchantId: true,
+            pointsAmount: true,
+          },
+        },
+        managedMerchants: {
+          select: {
+            id: true,
+            name: true,
+            cashbackRate: true,
+          },
+        },
       },
     });
 

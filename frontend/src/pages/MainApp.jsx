@@ -6,6 +6,10 @@ import { checkHealth } from '../services/healthService';
 import { transferPoints } from '../services/transactionService';
 import { useAuth } from '../hooks/useAuth';
 import { getQrPayload } from '../services/authService';
+import UserSearch from '../components/UserSearch';
+import PointDropModal from '../components/PointDropModal';
+import CashierPage from './CashierPage';
+import { makeMeMerchant } from '../services/userService';
 
 // Головний компонент додатка
 function App() {
@@ -32,33 +36,27 @@ function App() {
     fetchHealth();
   }, []);
 
-  // Дані транзакцій
-  const transactions = [
-    {
-      id: 1,
-      amount: '+100',
-      name: 'Наталі',
-      time: '5 хвилин тому',
-      status: 'Отримано',
-      color: '#2E7D32',
-    },
-    {
-      id: 2,
-      amount: '-50',
-      name: 'Ліза',
-      time: '1 година тому',
-      status: 'Переказано',
-      color: '#8B2E2E',
-    },
-    {
-      id: 3,
-      amount: '+200',
-      name: 'Антон',
-      time: '5 годин тому',
-      status: 'Отримано',
-      color: '#2E7D32',
-    },
-  ];
+  const [transactions, setTransactions] = useState([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(true);
+
+  useEffect(() => {
+    import('../services/transactionService').then(({ getMyTransactions }) => {
+      getMyTransactions()
+        .then((data) => {
+          const mapped = data.map(t => ({
+            id: t.id,
+            amount: t.type === 'EARN' || t.receiverId === t.id ? '+' + t.amount : '-' + t.amount,
+            name: t.type,
+            time: new Date(t.timestamp).toLocaleString(),
+            status: t.type,
+            color: t.type === 'EARN' || t.receiverId === t.id ? '#10b981' : '#ef4444',
+          }));
+          setTransactions(mapped);
+        })
+        .catch(console.error)
+        .finally(() => setLoadingTransactions(false));
+    });
+  }, []);
 
   // Відкриває потрібний екран
   const renderScreen = () => {
@@ -84,6 +82,8 @@ function App() {
         return <SuccessScreen setScreen={setScreen} />;
       case 'error':
         return <ErrorScreen setScreen={setScreen} />;
+      case 'cashier':
+        return <CashierPage setScreen={setScreen} />;
       case 'menu':
         return <MenuScreen setScreen={setScreen} transactions={transactions} />;
       default:
@@ -98,7 +98,7 @@ function App() {
     }
   };
 
-  return <main style={styles.page}>{renderScreen()}</main>;
+  return <main className="app-container">{renderScreen()}</main>;
 }
 
 // Головний екран
@@ -141,75 +141,102 @@ function MainScreen({ setScreen, transactions, backendError, backendHealth }) {
     }
   }
 
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+
+  const handleSelectUser = (u) => {
+    setSelectedUser(u);
+    setShowModal(true);
+  };
+
   return (
-    <section style={styles.phone}>
+    <section className="page-section animate-fade-in">
       <Header
         title="PointDrop"
         leftAction={() => setScreen('menu')}
-        leftSymbol="☰"
+        leftSymbol={
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        }
         showRightIcons
         setScreen={setScreen}
       />
 
-      <div style={styles.balanceCard}>
-        <div style={styles.balanceLeft}>
-          <span style={styles.star}>✦</span>
-          <p style={styles.greeting}>Привіт, {user?.name?.split(' ')[0] || 'Користувачу'}!</p>
-        </div>
+      <div className="glass-card balance-card">
+        <div className="balance-row">
+          <div className="balance-left">
+            <span className="star-icon">✦</span>
+            <p className="greeting-text">Привіт, {user?.name?.split(' ')[0] || 'Користувачу'}!</p>
+          </div>
 
-        <div style={styles.balanceRight}>
-          <p style={styles.balanceText}>Баланс: 0 балів</p>
-          <span style={styles.cardMini}>▭</span>
+          <div className="balance-right">
+            <p className="balance-text">Баланс: {user?.balances?.[0]?.pointsAmount || 0} pt</p>
+          </div>
         </div>
       </div>
 
-      <div style={styles.transferCard}>
-        <h2 style={styles.sectionTitle}>Переказати бали</h2>
+      <div className="glass-card">
+        <h2 className="section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          Швидкий переказ
+        </h2>
 
-        {backendError && <p style={styles.errorNotice}>{backendError}</p>}
+        {backendError && <p className="notice-error">{backendError}</p>}
         {backendHealth && !backendError && (
-          <p style={styles.successNotice}>Бекенд підключено</p>
+          <p className="notice-success">Бекенд підключено</p>
         )}
 
-        <div style={styles.transferRow}>
-          <div style={styles.inputsColumn}>
-            <input
-              style={styles.input}
-              placeholder="Телефон отримувача, напр. +380501110002"
-              value={receiverPhone}
-              onChange={(event) => setReceiverPhone(event.target.value)}
+        <div className="transfer-row" style={{ alignItems: 'center' }}>
+          <div className="inputs-col">
+            <UserSearch 
+              merchantId={import.meta.env.VITE_DEMO_MERCHANT_ID} 
+              onSelectUser={handleSelectUser} 
             />
-            <input
-              style={styles.input}
-              placeholder="Кількість"
-              type="number"
-              min="1"
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-            />
-            <button
-              style={styles.greenButton}
-              onClick={handleTransfer}
-              disabled={isTransferLoading}
-            >
-              {isTransferLoading ? 'Переказ...' : 'Переказати'}
-            </button>
-
             {transferStatus && (
-              <p style={styles.transferStatus}>{transferStatus}</p>
+              <p className={transferStatus.includes('Успішно') ? "notice-success" : "notice-error"}>{transferStatus}</p>
             )}
           </div>
 
-          <div style={styles.qrColumn}>
-            <div style={styles.qrBox} onClick={() => setScreen('qr')}>
-              <FakeQR />
+          <div className="qr-col">
+            <div className="qr-mini-btn" onClick={() => setScreen('qr')} style={{ color: '#09090b' }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="5" height="5" rx="1" ry="1"></rect>
+                <rect x="16" y="3" width="5" height="5" rx="1" ry="1"></rect>
+                <rect x="3" y="16" width="5" height="5" rx="1" ry="1"></rect>
+                <path d="M21 16h-3a2 2 0 0 0-2 2v3"></path>
+                <path d="M21 21v.01"></path>
+                <path d="M12 7v3a2 2 0 0 1-2 2H7"></path>
+                <path d="M3 12h.01"></path>
+                <path d="M12 3h.01"></path>
+                <path d="M12 16v.01"></path>
+                <path d="M16 12h1"></path>
+                <path d="M21 12v.01"></path>
+                <path d="M12 21v-1"></path>
+              </svg>
             </div>
-            <p style={styles.qrLabel}>Показати QR для отримання балів</p>
+            <p className="qr-label">Мій QR</p>
           </div>
         </div>
       </div>
 
-      <h3 style={styles.transactionsTitle}>Останні транзакції</h3>
+      {showModal && selectedUser && (
+        <PointDropModal
+          selectedUser={selectedUser}
+          merchantId={import.meta.env.VITE_DEMO_MERCHANT_ID}
+          senderId={user?.id}
+          onClose={() => {
+            setShowModal(false);
+            setSelectedUser(null);
+          }}
+          onSuccess={(amount) => {
+            setShowModal(false);
+            setSelectedUser(null);
+            setTransferStatus(`Успішно переказано ${amount} балів`);
+            setScreen('success');
+          }}
+        />
+      )}
+
+      <h3 className="section-title" style={{ marginTop: '10px' }}>Останні транзакції</h3>
 
       <TransactionTable transactions={transactions} />
     </section>
@@ -241,39 +268,46 @@ function QRScreen({ setScreen }) {
   }, []);
 
   return (
-    <section style={styles.phone}>
+    <section className="page-section animate-fade-in">
       <Header
-        title="QR-код"
+        title="Мій QR-код"
         leftAction={() => setScreen('main')}
-        leftSymbol="←"
+        leftSymbol={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>}
         setScreen={setScreen}
       />
 
-      <div style={styles.centerBlock}>
+      <div className="center-block">
         {loading ? (
-          <div style={styles.infoCard}>
-            <p style={styles.infoText}>Завантаження...</p>
+          <div className="glass-card">
+            <p className="notice-success">Завантаження...</p>
           </div>
         ) : error ? (
-          <div style={styles.infoCard}>
-            <p style={styles.infoText}>{error}</p>
+          <div className="glass-card">
+            <p className="notice-error">{error}</p>
           </div>
         ) : (
           <>
-            <div style={styles.bigQrBox}>
-              <QRCodeDisplay value={qrData?.qr_payload} size={200} />
+            <div className="qr-container-lg">
+              <QRCodeDisplay value={qrData?.qr_payload} size={220} />
             </div>
 
-            <div style={styles.infoCard}>
-              <p style={styles.infoText}>Клієнт: {user?.name || 'Невідомо'}</p>
-              <p style={styles.infoText}>Телефон: {user?.phone || 'Невідомо'}</p>
-              <p style={styles.infoText}>ID: {user?.id?.substring(0, 8) || 'Невідомо'}</p>
+            <div className="glass-card" style={{ width: '100%', marginBottom: '40px' }}>
+              <div className="info-list">
+                <div className="info-item">
+                  <span className="info-label">Клієнт</span>
+                  <span className="info-value">{user?.name || 'Невідомо'}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Телефон</span>
+                  <span className="info-value">{user?.phone || 'Невідомо'}</span>
+                </div>
+              </div>
             </div>
           </>
         )}
 
         <button
-          style={styles.greenButtonWide}
+          className="btn btn-primary btn-full"
           onClick={() => setScreen('main')}
         >
           Готово
@@ -283,43 +317,30 @@ function QRScreen({ setScreen }) {
   );
 }
 
-// Екран сканера
+// Екран сканера (Mock)
 function ScanScreen({ setScreen }) {
   return (
-    <section style={styles.phone}>
+    <section className="page-section animate-fade-in">
       <Header
         title="Сканер"
         leftAction={() => setScreen('main')}
-        leftSymbol="←"
+        leftSymbol={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>}
         setScreen={setScreen}
       />
 
-      <div style={styles.centerBlock}>
-        <div style={styles.scanArea}>
-          <div style={styles.scanQrWrap}>
-            <FakeQR />
-          </div>
+      <div className="center-block">
+        <div style={{ width: '240px', height: '240px', border: '2px dashed var(--primary)', borderRadius: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '32px' }}>
+          <p style={{ color: 'var(--text-secondary)' }}>Камера...</p>
         </div>
 
-        <p style={styles.scanHint}>Наведіть камеру на QR-код</p>
+        <p style={{ marginBottom: '32px', color: 'var(--text-secondary)' }}>Наведіть камеру на QR-код користувача</p>
 
-        <div style={styles.rowButtons}>
-          <button style={styles.lightButton}>Ліхтарик</button>
-          <button style={styles.lightButton}>Камера</button>
-        </div>
-
-        <div style={styles.rowButtons}>
-          <button
-            style={styles.greenButtonWide}
-            onClick={() => setScreen('success')}
-          >
-            Успішне сканування
+        <div style={{ display: 'flex', gap: '16px', width: '100%' }}>
+          <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => setScreen('success')}>
+            Демо: Успіх
           </button>
-          <button
-            style={styles.redButtonWide}
-            onClick={() => setScreen('error')}
-          >
-            Помилка
+          <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => setScreen('error')}>
+            Демо: Помилка
           </button>
         </div>
       </div>
@@ -337,43 +358,58 @@ function ProfileScreen({ setScreen, navigate, logout }) {
       setLoading(false);
     }
   }, [user]);
+
   return (
-    <section style={styles.phone}>
+    <section className="page-section animate-fade-in">
       <Header
         title="Профіль"
         leftAction={() => setScreen('main')}
-        leftSymbol="←"
+        leftSymbol={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>}
         setScreen={setScreen}
       />
 
-      <div style={styles.profileTop}>
-        <div style={styles.avatar}>◯</div>
-        <button style={styles.smallGhostButton}>Змінити фото</button>
+      <div className="profile-header">
+        <div className="avatar-lg">
+          {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+        </div>
+        <button className="btn btn-ghost">Змінити фото</button>
       </div>
 
-      <div style={styles.profileBalance}>Поточний баланс: 1000</div>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div className="profile-balance-badge">
+          Баланс: {user?.balances?.[0]?.pointsAmount || 0} pt
+        </div>
+      </div>
 
-      <div style={styles.profileCard}>
+      <div className="glass-card" style={{ marginBottom: '40px' }}>
         {loading ? (
-          <p style={styles.profileText}>Завантаження...</p>
+          <p className="notice-success">Завантаження...</p>
         ) : (
-          <>
-            <p style={styles.profileText}>Ім'я: {user?.name || 'Невідомо'}</p>
-            <p style={styles.profileText}>Нік: @{user?.id?.substring(0, 8) || 'Невідомо'}</p>
-            <p style={styles.profileText}>Телефон: {user?.phone || 'Невідомо'}</p>
-            <p style={styles.profileText}>E-mail: {user?.email || 'Невідомо'}</p>
-            {user?.createdAt && (
-              <p style={styles.profileText}>
-                Опікун: {new Date(user.createdAt).toLocaleDateString('uk-UA')}
-              </p>
-            )}
-          </>
+          <div className="info-list">
+            <div className="info-item">
+              <span className="info-label">Ім'я</span>
+              <span className="info-value">{user?.name || 'Невідомо'}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Телефон</span>
+              <span className="info-value">{user?.phone || 'Невідомо'}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">E-mail</span>
+              <span className="info-value">{user?.email || 'Невідомо'}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">ID</span>
+              <span className="info-value" style={{ fontFamily: 'monospace' }}>{user?.id?.substring(0, 8) || 'Невідомо'}</span>
+            </div>
+          </div>
         )}
       </div>
 
-      <div style={styles.bottomButtons}>
+      <div style={{ display: 'flex', gap: '16px', marginTop: 'auto' }}>
         <button
-          style={styles.redButtonWide}
+          className="btn btn-danger"
+          style={{ flex: 1 }}
           onClick={() => {
             logout();
             navigate('/login');
@@ -381,8 +417,48 @@ function ProfileScreen({ setScreen, navigate, logout }) {
         >
           Вийти
         </button>
+      </div>
+    </section>
+  );
+}
+
+// Екран успішного сканування
+function SuccessScreen({ setScreen }) {
+  return (
+    <section className="page-section animate-fade-in">
+      <div className="message-center">
+        <div className="status-icon-lg status-success">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <h2 className="status-title" style={{ color: 'var(--primary)' }}>Успішно!</h2>
+        <p className="status-sub">Транзакція виконана успішно.</p>
+
         <button
-          style={styles.greenButtonWide}
+          className="btn btn-primary btn-full"
+          style={{ marginTop: '20px' }}
+          onClick={() => setScreen('main')}
+        >
+          На головну
+        </button>
+      </div>
+    </section>
+  );
+}
+
+// Екран помилки
+function ErrorScreen({ setScreen }) {
+  return (
+    <section className="page-section animate-fade-in">
+      <div className="message-center">
+        <div className="status-icon-lg status-error">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </div>
+        <h2 className="status-title" style={{ color: 'var(--danger)' }}>Помилка</h2>
+        <p className="status-sub">Щось пішло не так. Спробуйте ще раз.</p>
+
+        <button
+          className="btn btn-secondary btn-full"
+          style={{ marginTop: '20px' }}
           onClick={() => setScreen('main')}
         >
           Повернутися
@@ -394,183 +470,75 @@ function ProfileScreen({ setScreen, navigate, logout }) {
 
 // Екран швидкого переказу
 function IntroScreen({ setScreen }) {
-  return (
-    <section style={styles.phone}>
-      <Header
-        title="Швидкий переказ"
-        leftAction={() => setScreen('main')}
-        leftSymbol="←"
-        setScreen={setScreen}
-      />
-
-      <div style={styles.topStepRow}>
-        <span style={styles.stepText}>Крок 1 з 3</span>
-        <span style={styles.balanceSmall}>Баланс: 1000 балів</span>
-      </div>
-
-      <div style={styles.steps}>
-        <span style={styles.activeStep}>1</span>
-        <span style={styles.line}></span>
-        <span style={styles.step}>2</span>
-        <span style={styles.line}></span>
-        <span style={styles.step}>3</span>
-      </div>
-
-      <div style={styles.whitePanel}>
-        <p style={styles.panelTitle}>Отримувач</p>
-        <input
-          style={styles.darkInput}
-          placeholder="Введіть номер телефону або нік"
-        />
-
-        <div style={styles.userList}>
-          <div style={styles.userRow}>
-            <span>Наталя</span>
-          </div>
-          <div style={styles.userRowActive}>
-            <span>Ліза</span>
-            <span>✓</span>
-          </div>
-          <div style={styles.userRow}>
-            <span>Антон</span>
-          </div>
-        </div>
-
-        <div style={styles.smallScanBox}>Скан</div>
-      </div>
-
-      <div style={styles.successPanel}>
-        <p style={styles.successPanelTitle}>Користувач Ліза знайдено</p>
-        <div style={styles.successPanelRow}>
-          <div>
-            <p style={styles.successName}>Ліза</p>
-            <p style={styles.successNick}>@lizaa_123</p>
-          </div>
-          <span style={styles.successMark}>✓</span>
-        </div>
-      </div>
-
-      <div style={styles.stepBlock}>
-        <p style={styles.stepBlockTitle}>Крок 2 з 3</p>
-        <input
-          style={styles.darkInputTransparent}
-          placeholder="Введіть кількість"
-        />
-
-        <div style={styles.plusButtons}>
-          <button style={styles.outlineButton}>+50</button>
-          <button style={styles.outlineButton}>+100</button>
-          <button style={styles.outlineButton}>+200</button>
-        </div>
-
-        <div style={styles.bottomButtons}>
-          <button
-            style={styles.redButtonWide}
-            onClick={() => setScreen('main')}
-          >
-            Відмінити
-          </button>
-          <button
-            style={styles.greenButtonWide}
-            onClick={() => setScreen('success')}
-          >
-            Далі
-          </button>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// Екран успішного сканування
-function SuccessScreen({ setScreen }) {
-  return (
-    <section style={styles.phone}>
-      <Header
-        title="Сканер"
-        leftAction={() => setScreen('main')}
-        leftSymbol="←"
-        setScreen={setScreen}
-      />
-
-      <div style={styles.messageCenter}>
-        <div style={styles.successIcon}>✓</div>
-        <p style={styles.successTitle}>Успішно!</p>
-        <p style={styles.successSubtext}>Нараховано 100 балів</p>
-
-        <button
-          style={styles.lightButtonWide}
-          onClick={() => setScreen('main')}
-        >
-          Готово
-        </button>
-      </div>
-    </section>
-  );
-}
-
-// Екран помилки
-function ErrorScreen({ setScreen }) {
-  return (
-    <section style={styles.phone}>
-      <Header
-        title="Сканер"
-        leftAction={() => setScreen('main')}
-        leftSymbol="←"
-        setScreen={setScreen}
-      />
-
-      <div style={styles.messageCenter}>
-        <div style={styles.errorIcon}>!</div>
-        <p style={styles.errorTitle}>QR-код не знайдено</p>
-        <p style={styles.errorSubtext}>Спробуйте ще раз</p>
-
-        <button
-          style={styles.lightButtonWide}
-          onClick={() => setScreen('scan')}
-        >
-          Сканувати знову
-        </button>
-      </div>
-    </section>
-  );
+  return <MainScreen setScreen={setScreen} />;
 }
 
 // Екран меню
 function MenuScreen({ setScreen, transactions }) {
+  const { user, refreshUserProfile } = useAuth();
+  
+  const handleMakeMerchant = async () => {
+    try {
+      await makeMeMerchant();
+      await refreshUserProfile();
+      alert('Успіх! Ви тепер мерчант. Перейдіть в "Режим касира"');
+    } catch (err) {
+      alert('Помилка: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
   return (
-    <section style={styles.phone}>
-      <div style={styles.overlay}>
-        <MainScreen setScreen={setScreen} transactions={transactions} />
+    <>
+      <div className="side-menu-overlay" onClick={() => setScreen('main')}></div>
+      <div className="side-menu">
+        <div className="menu-top">
+          <span className="menu-title">PointDrop</span>
+          <button
+            className="icon-btn"
+            onClick={() => setScreen('main')}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
 
-        <div style={styles.menuPanel}>
-          <div style={styles.menuTop}>
-            <span style={styles.menuTitle}>Меню</span>
-            <button
-              style={styles.closeButton}
-              onClick={() => setScreen('main')}
-            >
-              ×
-            </button>
-          </div>
-
-          <div style={styles.menuLine}></div>
-
-          <button style={styles.menuItem} onClick={() => setScreen('scan')}>
+        <div className="menu-nav">
+          <button className="menu-item" onClick={() => setScreen('main')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Головна
+          </button>
+          <button className="menu-item" onClick={() => setScreen('scan')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
             Сканер
           </button>
-          <button style={styles.menuItem} onClick={() => setScreen('main')}>
-            Історія
+          <button className="menu-item" onClick={() => setScreen('qr')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            Мій QR-код
           </button>
-          <button style={styles.menuItem} onClick={() => setScreen('profile')}>
+          
+          {user?.role === 'CUSTOMER' && (
+            <button className="menu-item" onClick={handleMakeMerchant}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+              Стати мерчантом (Тест)
+            </button>
+          )}
+
+          {user?.role === 'ADMIN' && (
+            <button className="menu-item" onClick={() => setScreen('cashier')}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+              Режим касира
+            </button>
+          )}
+
+          <button className="menu-item" onClick={() => setScreen('profile')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             Налаштування
-          </button>
-          <button style={styles.menuItem} onClick={() => setScreen('qr')}>
-            QR-код
           </button>
         </div>
       </div>
-    </section>
+      
+      {/* Background layer */}
+      <MainScreen setScreen={() => {}} transactions={transactions} />
+    </>
   );
 }
 
@@ -583,943 +551,37 @@ function Header({
   setScreen,
 }) {
   return (
-    <header style={styles.header}>
-      <div style={styles.headerLeft}>
-        <button style={styles.iconButton} onClick={leftAction}>
+    <header className="header">
+      <div className="header-left">
+        <button className="icon-btn" onClick={leftAction}>
           {leftSymbol}
         </button>
-        <span style={styles.headerTitle}>{title}</span>
+        <span className="header-title">{title}</span>
       </div>
 
-      <div style={styles.headerRight}>
+      <div className="header-right">
         {showRightIcons && (
           <>
             <button
-              style={styles.headerMiniButton}
+              className="header-mini-btn"
               onClick={() => setScreen('qr')}
             >
-              ⌕
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </button>
-            <button style={styles.headerMiniButton}>🔔</button>
+            <button className="header-mini-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            </button>
             <button
-              style={styles.headerMiniButton}
+              className="header-mini-btn"
               onClick={() => setScreen('profile')}
             >
-              👤
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             </button>
           </>
         )}
-        <span style={styles.lang}>UA|EN</span>
       </div>
     </header>
   );
 }
-
-// Фейковий QR для демо
-function FakeQR() {
-  return (
-    <div style={styles.qrPattern}>
-      <div style={styles.qrSquareTopLeft}></div>
-      <div style={styles.qrSquareTopRight}></div>
-      <div style={styles.qrSquareBottomLeft}></div>
-      <div style={styles.qrDots}></div>
-    </div>
-  );
-}
-
-const styles = {
-  // Фон сторінки
-  page: {
-    width: 'fit-content',
-    margin: 0,
-    background: 'transparent',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-    padding: 0,
-    fontFamily: 'Arial, sans-serif',
-    position: 'relative',
-  },
-
-  // Контейнер мобільного екрана
-  phone: {
-    width: '390px',
-    minHeight: '844px',
-    background: '#3B3940',
-    padding: '24px 18px 28px',
-    boxSizing: 'border-box',
-    position: 'relative',
-    color: '#FFFFFF',
-  },
-
-  // Шапка
-  header: {
-    height: '56px',
-    background: '#111111',
-    borderRadius: '18px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '0 14px',
-    marginBottom: '18px',
-  },
-
-  // Ліва частина шапки
-  headerLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-  },
-
-  // Права частина шапки
-  headerRight: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  },
-
-  // Заголовок у шапці
-  headerTitle: {
-    fontSize: '14px',
-    color: '#FFFFFF',
-  },
-
-  // Кнопка-іконка
-  iconButton: {
-    background: 'transparent',
-    border: 'none',
-    color: '#FFFFFF',
-    fontSize: '18px',
-    cursor: 'pointer',
-  },
-
-  // Маленькі кнопки справа
-  headerMiniButton: {
-    background: 'transparent',
-    border: 'none',
-    color: '#FFFFFF',
-    fontSize: '14px',
-    cursor: 'pointer',
-  },
-
-  // Перемикач мови
-  lang: {
-    fontSize: '11px',
-    color: '#FFFFFF',
-  },
-
-  // Картка балансу
-  balanceCard: {
-    background: '#F2F2F2',
-    borderRadius: '16px',
-    padding: '14px 16px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '18px',
-  },
-
-  // Ліва частина балансу
-  balanceLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  },
-
-  // Права частина балансу
-  balanceRight: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-  },
-
-  // Іконка зірки
-  star: {
-    fontSize: '18px',
-    color: '#8B2E2E',
-  },
-
-  // Привітання
-  greeting: {
-    margin: 0,
-    color: '#8B2E2E',
-    fontSize: '14px',
-  },
-
-  // Текст балансу
-  balanceText: {
-    margin: 0,
-    color: '#2E7D32',
-    fontSize: '14px',
-  },
-
-  // Маленька іконка картки
-  cardMini: {
-    fontSize: '15px',
-    color: '#2E7D32',
-  },
-
-  // Картка переказу
-  transferCard: {
-    background: '#1A1A1D',
-    border: '1px solid #EDEDED',
-    borderRadius: '18px',
-    padding: '14px',
-    marginBottom: '20px',
-  },
-
-  transferStatus: {
-    margin: '10px 0 0 0',
-    fontSize: '11px',
-    color: '#FFFFFF',
-    lineHeight: '15px',
-  },
-
-  successNotice: {
-    margin: '0 0 10px 0',
-    color: '#B4E28E',
-    fontSize: '11px',
-  },
-
-  errorNotice: {
-    margin: '0 0 10px 0',
-    color: '#FFB4B4',
-    fontSize: '11px',
-  },
-
-  // Заголовок секції
-  sectionTitle: {
-    margin: '0 0 14px 0',
-    fontSize: '14px',
-    color: '#FFFFFF',
-  },
-
-  // Рядок блоку переказу
-  transferRow: {
-    display: 'flex',
-    gap: '14px',
-  },
-
-  // Колонка з input
-  inputsColumn: {
-    flex: 1,
-  },
-
-  // Колонка QR
-  qrColumn: {
-    width: '92px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-
-  // Поле вводу
-  input: {
-    width: '100%',
-    background: '#F2F2F2',
-    border: 'none',
-    borderRadius: '14px',
-    padding: '10px 14px',
-    boxSizing: 'border-box',
-    fontSize: '12px',
-    marginBottom: '12px',
-    outline: 'none',
-  },
-
-  // Зелена кнопка
-  greenButton: {
-    width: '100%',
-    background: '#2F7D1F',
-    color: '#FFFFFF',
-    border: '1px solid #EDEDED',
-    borderRadius: '16px',
-    padding: '8px 12px',
-    fontSize: '12px',
-    cursor: 'pointer',
-  },
-
-  // Широка зелена кнопка
-  greenButtonWide: {
-    minWidth: '120px',
-    background: '#2F7D1F',
-    color: '#FFFFFF',
-    border: '1px solid #EDEDED',
-    borderRadius: '16px',
-    padding: '9px 16px',
-    fontSize: '12px',
-    cursor: 'pointer',
-  },
-
-  // Червона кнопка
-  redButtonWide: {
-    minWidth: '120px',
-    background: '#8B2E2E',
-    color: '#FFFFFF',
-    border: '1px solid #EDEDED',
-    borderRadius: '16px',
-    padding: '9px 16px',
-    fontSize: '12px',
-    cursor: 'pointer',
-  },
-
-  // Світла кнопка
-  lightButton: {
-    minWidth: '110px',
-    background: '#F2F2F2',
-    color: '#2E2E2E',
-    border: 'none',
-    borderRadius: '14px',
-    padding: '9px 12px',
-    fontSize: '12px',
-    cursor: 'pointer',
-  },
-
-  // Широка світла кнопка
-  lightButtonWide: {
-    minWidth: '140px',
-    background: '#F2F2F2',
-    color: '#2E2E2E',
-    border: 'none',
-    borderRadius: '14px',
-    padding: '10px 14px',
-    fontSize: '12px',
-    cursor: 'pointer',
-  },
-
-  // Невелика прозора кнопка
-  smallGhostButton: {
-    background: 'transparent',
-    color: '#FFFFFF',
-    border: 'none',
-    fontSize: '11px',
-    cursor: 'pointer',
-    marginTop: '8px',
-  },
-
-  // QR-блок
-  qrBox: {
-    width: '72px',
-    height: '72px',
-    background: '#FFFFFF',
-    borderRadius: '6px',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    cursor: 'pointer',
-  },
-
-  // Великий QR-блок
-  bigQrBox: {
-    width: '122px',
-    height: '122px',
-    background: '#FFFFFF',
-    borderRadius: '10px',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: '20px',
-  },
-
-  // Підпис під QR
-  qrLabel: {
-    margin: '8px 0 0 0',
-    fontSize: '10px',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    lineHeight: '14px',
-  },
-
-  // Внутрішній QR-візерунок
-  qrPattern: {
-    width: '52px',
-    height: '52px',
-    position: 'relative',
-    background:
-      'radial-gradient(circle, #000 17%, transparent 18%) 0 0 / 8px 8px',
-  },
-
-  // Квадрат QR верхній лівий
-  qrSquareTopLeft: {
-    position: 'absolute',
-    top: '2px',
-    left: '2px',
-    width: '13px',
-    height: '13px',
-    border: '3px solid #000',
-    background: '#FFFFFF',
-  },
-
-  // Квадрат QR верхній правий
-  qrSquareTopRight: {
-    position: 'absolute',
-    top: '2px',
-    right: '2px',
-    width: '13px',
-    height: '13px',
-    border: '3px solid #000',
-    background: '#FFFFFF',
-  },
-
-  // Квадрат QR нижній лівий
-  qrSquareBottomLeft: {
-    position: 'absolute',
-    bottom: '2px',
-    left: '2px',
-    width: '13px',
-    height: '13px',
-    border: '3px solid #000',
-    background: '#FFFFFF',
-  },
-
-  // Дрібні точки QR
-  qrDots: {
-    position: 'absolute',
-    right: '6px',
-    bottom: '6px',
-    width: '10px',
-    height: '10px',
-    border: '2px solid #000',
-    background: '#FFFFFF',
-  },
-
-  // Заголовок транзакцій
-  transactionsTitle: {
-    margin: '0 0 12px 0',
-    fontSize: '14px',
-    color: '#FFFFFF',
-  },
-
-  // Список транзакцій
-  transactionsList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '14px',
-  },
-
-  // Картка транзакції
-  transactionCard: {
-    background: '#F2F2F2',
-    borderRadius: '16px',
-    padding: '14px 16px',
-  },
-
-  // Верх картки транзакції
-  transactionTop: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '10px',
-  },
-
-  // Ліва частина транзакції
-  transactionLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  },
-
-  // Права частина транзакції
-  transactionRight: {
-    display: 'flex',
-    alignItems: 'center',
-  },
-
-  // Сума
-  amount: {
-    fontSize: '12px',
-    fontWeight: '700',
-  },
-
-  // Ім'я
-  personName: {
-    fontSize: '12px',
-    color: '#111111',
-  },
-
-  // Час
-  timeText: {
-    fontSize: '11px',
-    color: '#111111',
-  },
-
-  // Низ транзакції
-  transactionBottom: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-
-  // Статус
-  statusText: {
-    fontSize: '11px',
-    color: '#111111',
-    marginLeft: '28px',
-  },
-
-  // Стрілка
-  arrow: {
-    fontSize: '18px',
-    color: '#111111',
-  },
-
-  // Центрований блок
-  centerBlock: {
-    minHeight: '680px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingTop: '40px',
-  },
-
-  // Інформаційна картка
-  infoCard: {
-    width: '100%',
-    background: '#F2F2F2',
-    borderRadius: '12px',
-    padding: '12px 14px',
-    boxSizing: 'border-box',
-    marginBottom: '30px',
-  },
-
-  // Текст інформації
-  infoText: {
-    margin: '4px 0',
-    color: '#111111',
-    fontSize: '12px',
-  },
-
-  // Область сканування
-  scanArea: {
-    width: '170px',
-    height: '115px',
-    background: '#9B90A8',
-    borderRadius: '8px',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: '18px',
-  },
-
-  // Обгортка QR у сканері
-  scanQrWrap: {
-    width: '88px',
-    height: '88px',
-    background: '#FFFFFF',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  // Підказка сканера
-  scanHint: {
-    fontSize: '12px',
-    margin: '0 0 20px 0',
-    color: '#FFFFFF',
-  },
-
-  // Ряд кнопок
-  rowButtons: {
-    display: 'flex',
-    gap: '10px',
-    marginBottom: '12px',
-  },
-
-  // Верх профілю
-  profileTop: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    marginBottom: '18px',
-  },
-
-  // Аватар
-  avatar: {
-    width: '62px',
-    height: '62px',
-    borderRadius: '50%',
-    border: '2px solid #F2F2F2',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    fontSize: '24px',
-    color: '#F2F2F2',
-  },
-
-  // Баланс у профілі
-  profileBalance: {
-    background: '#2F7D1F',
-    color: '#FFFFFF',
-    borderRadius: '14px',
-    padding: '8px 12px',
-    fontSize: '12px',
-    width: 'fit-content',
-    marginBottom: '16px',
-  },
-
-  // Картка профілю
-  profileCard: {
-    background: '#1A1A1D',
-    border: '1px solid #EDEDED',
-    borderRadius: '16px',
-    padding: '16px',
-    marginBottom: '18px',
-  },
-
-  // Текст профілю
-  profileText: {
-    margin: '0 0 8px 0',
-    fontSize: '12px',
-    color: '#FFFFFF',
-  },
-
-  // Нижні кнопки
-  bottomButtons: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    gap: '10px',
-  },
-
-  // Текст кроків
-  stepText: {
-    fontSize: '12px',
-    color: '#FFFFFF',
-  },
-
-  // Малий баланс
-  balanceSmall: {
-    fontSize: '12px',
-    color: '#B4E28E',
-  },
-
-  // Рядок зверху для кроків
-  topStepRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '16px',
-  },
-
-  // Кроки
-  steps: {
-    display: 'flex',
-    alignItems: 'center',
-    marginBottom: '20px',
-  },
-
-  // Активний крок
-  activeStep: {
-    width: '24px',
-    height: '24px',
-    borderRadius: '50%',
-    background: '#8B2E2E',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    fontSize: '12px',
-  },
-
-  // Неактивний крок
-  step: {
-    width: '24px',
-    height: '24px',
-    borderRadius: '50%',
-    background: '#8A7A7A',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    fontSize: '12px',
-  },
-
-  // Лінія між кроками
-  line: {
-    flex: 1,
-    height: '1px',
-    background: '#FFFFFF',
-    margin: '0 8px',
-  },
-
-  // Біла панель
-  whitePanel: {
-    background: '#F2F2F2',
-    borderRadius: '12px',
-    padding: '12px',
-    marginBottom: '18px',
-    position: 'relative',
-  },
-
-  // Заголовок панелі
-  panelTitle: {
-    margin: '0 0 10px 0',
-    color: '#111111',
-    fontSize: '12px',
-  },
-
-  // Темне поле вводу
-  darkInput: {
-    width: '100%',
-    background: '#3A3A40',
-    color: '#FFFFFF',
-    border: 'none',
-    borderRadius: '10px',
-    padding: '8px 10px',
-    fontSize: '11px',
-    boxSizing: 'border-box',
-    marginBottom: '10px',
-  },
-
-  // Прозоре поле
-  darkInputTransparent: {
-    width: '100%',
-    background: 'transparent',
-    color: '#FFFFFF',
-    border: '1px solid #FFFFFF',
-    borderRadius: '10px',
-    padding: '8px 10px',
-    fontSize: '11px',
-    boxSizing: 'border-box',
-    marginBottom: '14px',
-  },
-
-  // Список користувачів
-  userList: {
-    width: '65%',
-  },
-
-  // Рядок користувача
-  userRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '6px 0',
-    borderBottom: '1px solid #AAAAAA',
-    color: '#111111',
-    fontSize: '11px',
-  },
-
-  // Активний рядок користувача
-  userRowActive: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '6px 0',
-    borderBottom: '1px solid #AAAAAA',
-    color: '#111111',
-    fontSize: '11px',
-  },
-
-  // Малий блок скану
-  smallScanBox: {
-    position: 'absolute',
-    right: '12px',
-    top: '56px',
-    width: '72px',
-    height: '72px',
-    background: '#D7D2D8',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    color: '#111111',
-    fontSize: '11px',
-  },
-
-  // Панель успіху
-  successPanel: {
-    background: '#1F6F14',
-    borderRadius: '12px',
-    padding: '12px',
-    marginBottom: '18px',
-  },
-
-  // Заголовок успіху
-  successPanelTitle: {
-    margin: '0 0 10px 0',
-    fontSize: '12px',
-    color: '#FFFFFF',
-  },
-
-  // Рядок успіху
-  successPanelRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-
-  // Ім'я в успіху
-  successName: {
-    margin: 0,
-    fontSize: '12px',
-    color: '#FFFFFF',
-  },
-
-  // Нік в успіху
-  successNick: {
-    margin: '4px 0 0 0',
-    fontSize: '10px',
-    color: '#D9D9D9',
-  },
-
-  // Іконка успіху
-  successMark: {
-    fontSize: '20px',
-    color: '#FFFFFF',
-  },
-
-  // Блок кроку
-  stepBlock: {
-    paddingTop: '8px',
-  },
-
-  // Заголовок кроку
-  stepBlockTitle: {
-    margin: '0 0 10px 0',
-    fontSize: '12px',
-    color: '#FFFFFF',
-  },
-
-  // Кнопки +50 +100 +200
-  plusButtons: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    gap: '10px',
-    marginBottom: '18px',
-  },
-
-  // Контурна кнопка
-  outlineButton: {
-    flex: 1,
-    background: 'transparent',
-    border: '1px solid #FFFFFF',
-    color: '#FFFFFF',
-    borderRadius: '10px',
-    padding: '8px 0',
-    fontSize: '11px',
-    cursor: 'pointer',
-  },
-
-  // Повідомлення по центру
-  messageCenter: {
-    minHeight: '680px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '12px',
-  },
-
-  // Іконка успіху по центру
-  successIcon: {
-    width: '40px',
-    height: '40px',
-    borderRadius: '50%',
-    border: '2px solid #2F7D1F',
-    color: '#2F7D1F',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    fontSize: '22px',
-  },
-
-  // Заголовок успіху
-  successTitle: {
-    margin: 0,
-    color: '#2F7D1F',
-    fontSize: '24px',
-  },
-
-  // Текст успіху
-  successSubtext: {
-    margin: 0,
-    color: '#FFFFFF',
-    fontSize: '14px',
-  },
-
-  // Іконка помилки
-  errorIcon: {
-    width: '34px',
-    height: '34px',
-    borderRadius: '50%',
-    background: '#8B2E2E',
-    color: '#FFFFFF',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    fontSize: '20px',
-  },
-
-  // Заголовок помилки
-  errorTitle: {
-    margin: 0,
-    color: '#FFFFFF',
-    fontSize: '24px',
-  },
-
-  // Текст помилки
-  errorSubtext: {
-    margin: 0,
-    color: '#CCCCCC',
-    fontSize: '14px',
-  },
-
-  // Оверлей меню
-  overlay: {
-    position: 'relative',
-    width: '100%',
-    minHeight: '100%',
-  },
-
-  // Панель меню
-  menuPanel: {
-    position: 'absolute',
-    top: '10px',
-    left: '0',
-    width: '220px',
-    background: '#F2F2F2',
-    borderRadius: '12px',
-    padding: '12px',
-    boxSizing: 'border-box',
-  },
-
-  // Верх меню
-  menuTop: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-
-  // Заголовок меню
-  menuTitle: {
-    fontSize: '14px',
-    color: '#111111',
-  },
-
-  // Кнопка закриття
-  closeButton: {
-    background: 'transparent',
-    border: 'none',
-    fontSize: '18px',
-    cursor: 'pointer',
-    color: '#111111',
-  },
-
-  // Лінія в меню
-  menuLine: {
-    height: '1px',
-    background: '#999999',
-    margin: '10px 0',
-  },
-
-  // Кнопка пункту меню
-  menuItem: {
-    width: '100%',
-    textAlign: 'left',
-    padding: '8px 0',
-    border: 'none',
-    background: 'transparent',
-    color: '#111111',
-    cursor: 'pointer',
-    fontSize: '12px',
-  },
-};
 
 export default App;
