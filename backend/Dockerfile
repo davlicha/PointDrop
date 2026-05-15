@@ -8,6 +8,7 @@ RUN apk add --no-cache libc6-compat openssl
 
 COPY package*.json ./
 COPY prisma ./prisma
+COPY prisma.config.ts ./
 
 RUN npm ci
 
@@ -20,7 +21,7 @@ RUN apk add --no-cache openssl
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN npx prisma generate \
+RUN DATABASE_URL="postgresql://placeholder:5432/placeholder" npx prisma generate \
     && npm run build
 
 # ========== runner ==========
@@ -33,11 +34,12 @@ RUN apk add --no-cache openssl tini \
     && addgroup -S nodejs \
     && adduser -S nestjs -G nodejs
 
-COPY --from=builder --chown=nestjs:nodejs /app/src ./src
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nestjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nestjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nestjs:nodejs /app/package*.json ./
+COPY --from=builder --chown=nestjs:nodejs /app/prisma.config.ts ./
+COPY jest.config.js ./
 COPY tsconfig.json ./
 COPY src/ ./src/
 
