@@ -8,6 +8,7 @@ RUN apk add --no-cache libc6-compat openssl
 
 COPY package*.json ./
 COPY prisma ./prisma
+COPY prisma.config.ts ./
 
 RUN npm ci
 
@@ -33,7 +34,6 @@ RUN apk add --no-cache openssl tini \
     && addgroup -S nodejs \
     && adduser -S nestjs -G nodejs
 
-COPY --from=builder --chown=nestjs:nodejs /app/src ./src
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nestjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nestjs:nodejs /app/prisma ./prisma
