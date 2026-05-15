@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards, Get, Request } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -87,6 +87,17 @@ export class TransactionsController {
   async redeem(@Body() dto: RedeemPointsDto): Promise<TransactionResponseDto> {
     const result = await this.transactionsService.redeem(dto);
     return this.mapToResponse(result);
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Отримати історію транзакцій поточного користувача',
+    description: 'Повертає список транзакцій користувача.',
+  })
+  async getMyTransactions(@Request() req: any) {
+    return this.transactionsService.getUserTransactions(req.user.id);
   }
 
   private mapToResponse(result: TransactionResult): TransactionResponseDto {

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Transaction, TransactionType } from '@prisma/client';
 import { AuthService } from '../auth/auth.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -24,10 +24,31 @@ export class TransactionsService {
     );
 
     return this.prisma.$transaction(async (tx) => {
-      const receiver = await tx.user.findUniqueOrThrow({
-        where: { phone: dto.receiverPhone },
+      const receiver = await tx.user.findFirst({
+        where: dto.receiverId ? { id: dto.receiverId } : { phone: dto.receiverPhone },
         select: { id: true },
       });
+
+      if (!receiver) {
+        throw new NotFoundException('Користувача з таким номером не знайдено');
+      }
+
+      if (receiver.id === dto.senderId) {
+        throw new BadRequestException('Неможливо переказати бали самому собі');
+      }
+
+      const senderBalance = await tx.balance.findUnique({
+        where: {
+          userId_merchantId: {
+            userId: dto.senderId,
+            merchantId: dto.merchantId,
+          },
+        },
+      });
+
+      if (!senderBalance || senderBalance.pointsAmount < dto.amount) {
+        throw new ConflictException('Недостатньо балів на балансі для переказу');
+      }
 
       await tx.balance.update({
         where: {
@@ -202,5 +223,18 @@ export class TransactionsService {
     );
 
     return result;
+  }
+
+  async getUserTransactions(userId: string): Promise<Transaction[]> {
+    return this.prisma.transaction.findMany({
+      where: {
+        OR: [
+          { senderId: userId },
+          { receiverId: userId },
+        ],
+      },
+      orderBy: { timestamp: 'desc' },
+      take: 20,
+    });
   }
 }

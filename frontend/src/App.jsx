@@ -24,63 +24,31 @@ function ProtectedRoute({ children }) {
 
 // Сторінка історії транзакцій
 function TransactionsPage() {
-  const transactions = [
-    {
-      id: 1,
-      amount: '+100',
-      name: 'Наталі',
-      time: '5 хвилин тому',
-      status: 'Отримано',
-      color: '#2E7D32',
-    },
-    {
-      id: 2,
-      amount: '-50',
-      name: 'Ліза',
-      time: '1 година тому',
-      status: 'Переказано',
-      color: '#8B2E2E',
-    },
-    {
-      id: 3,
-      amount: '+200',
-      name: 'Антон',
-      time: '5 годин тому',
-      status: 'Отримано',
-      color: '#2E7D32',
-    },
-  ];
+  const [transactions, setTransactions] = useState([]);
+  
+  useEffect(() => {
+    import('./services/transactionService').then(({ getMyTransactions }) => {
+      getMyTransactions().then(data => {
+        const mapped = data.map(t => ({
+          id: t.id,
+          amount: t.type === 'EARN' || t.receiverId === t.id ? '+' + t.amount : '-' + t.amount,
+          name: t.type,
+          time: new Date(t.timestamp).toLocaleString(),
+          status: t.type,
+          color: t.type === 'EARN' || t.receiverId === t.id ? '#10b981' : '#ef4444',
+        }));
+        setTransactions(mapped);
+      }).catch(console.error);
+    });
+  }, []);
 
   return (
-    <div style={transactionsPageStyles.wrapper}>
-      <div style={transactionsPageStyles.phone}>
-        <h2 style={transactionsPageStyles.title}>Історія транзакцій</h2>
-        <TransactionTable transactions={transactions} />
-      </div>
+    <div className="page-section">
+      <h2 className="section-title">Історія транзакцій</h2>
+      <TransactionTable transactions={transactions} />
     </div>
   );
 }
-
-const transactionsPageStyles = {
-  wrapper: {
-    display: 'flex',
-    justifyContent: 'center',
-    width: '100%',
-  },
-  phone: {
-    width: '390px',
-    minHeight: '844px',
-    background: '#3B3940',
-    padding: '24px 18px 28px',
-    boxSizing: 'border-box',
-    color: '#FFFFFF',
-  },
-  title: {
-    margin: '0 0 20px 0',
-    fontSize: '20px',
-    color: '#FFFFFF',
-  },
-};
 
 // Внутрішній компонент додатку
 function AppContent() {

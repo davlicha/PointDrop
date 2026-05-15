@@ -33,6 +33,7 @@ model User {
   sentTransactions     Transaction[] @relation("SentTransactions")
   receivedTransactions Transaction[] @relation("ReceivedTransactions")
 
+  @@index([phone])
   @@map("users")
 }
 

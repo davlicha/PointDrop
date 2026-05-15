@@ -55,14 +55,42 @@ async function main() {
   console.log('Створюємо 5 транзакцій...');
 
   const transactions = [
-    { amount: 150.50, userId: createdUsers[0].id, merchantId: merchant.id, type: TransactionType.EARN, receiverId: createdUsers[0].id },
-    { amount: 45.00,  userId: createdUsers[0].id, merchantId: merchant.id, type: TransactionType.EARN, receiverId: createdUsers[0].id },
-    { amount: 320.00, userId: createdUsers[1].id, merchantId: merchant.id, type: TransactionType.EARN, receiverId: createdUsers[1].id },
-    { amount: 99.90,  userId: createdUsers[2].id, merchantId: merchant.id, type: TransactionType.EARN, receiverId: createdUsers[2].id },
-    { amount: 12.50,  userId: createdUsers[2].id, merchantId: merchant.id, type: TransactionType.EARN, receiverId: createdUsers[2].id },
+    { amount: 15, userId: createdUsers[0].id, merchantId: merchant.id, type: TransactionType.EARN, receiverId: createdUsers[0].id },
+    { amount: 4,  userId: createdUsers[0].id, merchantId: merchant.id, type: TransactionType.EARN, receiverId: createdUsers[0].id },
+    { amount: 32, userId: createdUsers[1].id, merchantId: merchant.id, type: TransactionType.EARN, receiverId: createdUsers[1].id },
+    { amount: 10, userId: createdUsers[2].id, merchantId: merchant.id, type: TransactionType.EARN, receiverId: createdUsers[2].id },
+    { amount: 1,  userId: createdUsers[2].id, merchantId: merchant.id, type: TransactionType.EARN, receiverId: createdUsers[2].id },
   ];
 
-  console.log('✅ Успіх: База заповнена згідно з ТЗ (3 юзери, 5 транзакцій)!');
+  for (const t of transactions) {
+    await prisma.transaction.create({
+      data: {
+        amount: t.amount,
+        type: t.type,
+        merchantId: t.merchantId,
+        receiverId: t.receiverId,
+      }
+    });
+
+    await prisma.balance.upsert({
+      where: {
+        userId_merchantId: {
+          userId: t.userId,
+          merchantId: t.merchantId,
+        }
+      },
+      create: {
+        userId: t.userId,
+        merchantId: t.merchantId,
+        pointsAmount: t.amount,
+      },
+      update: {
+        pointsAmount: { increment: t.amount }
+      }
+    });
+  }
+
+  console.log('✅ Успіх: База заповнена згідно з ТЗ (3 юзери, баланси та 5 транзакцій)!');
 }
 
 main()
