@@ -6,6 +6,7 @@ import { checkHealth } from '../services/healthService';
 import { transferPoints } from '../services/transactionService';
 import { useAuth } from '../hooks/useAuth';
 import { getQrPayload } from '../services/authService';
+import Toast from '../components/Toast';
 
 // Головний компонент додатка
 function App() {
@@ -33,7 +34,7 @@ function App() {
   }, []);
 
   // Дані транзакцій
-  // Список транзакцій
+
   const [transactions] = useState([]);
   const [transactionsLoading] = useState(false);
   const [transactionsError] = useState('');
@@ -104,34 +105,53 @@ function MainScreen({
   const [transferStatus, setTransferStatus] = useState('');
   const [isTransferLoading, setIsTransferLoading] = useState(false);
 
+  // Переказ балів
   async function handleTransfer() {
+    // Очищаємо статус
     setTransferStatus('');
 
+    // Перевірка пустих полів
     if (!receiverPhone.trim() || !amount) {
       setTransferStatus('Введіть телефон отримувача та кількість балів');
       return;
     }
 
+    // Перевірка кількості
+    if (Number(amount) <= 0) {
+      setTransferStatus('Кількість балів має бути більшою за 0');
+      return;
+    }
+
     try {
+      // Вмикаємо loader
       setIsTransferLoading(true);
 
+      // Переказ балів
       await transferPoints({
         receiverPhone: receiverPhone.trim(),
-        amount,
+        amount: Number(amount),
       });
 
+      // Успішний статус
       setTransferStatus('Переказ успішно виконано');
+
+      // Очищаємо поля
       setReceiverPhone('');
       setAmount('');
+
+      // Перехід на success screen
       setScreen('success');
     } catch (err) {
+      // Помилка з backend
       const message =
         err.response?.data?.message ||
         err.response?.data?.error ||
         'Не вдалося виконати переказ';
 
+      // Показ повідомлення
       setTransferStatus(Array.isArray(message) ? message.join(', ') : message);
     } finally {
+      // Вимикаємо loader
       setIsTransferLoading(false);
     }
   }
@@ -175,7 +195,9 @@ function MainScreen({
               placeholder="Телефон отримувача, напр. +380501110002"
               value={receiverPhone}
               onChange={(event) => setReceiverPhone(event.target.value)}
+              disabled={isTransferLoading}
             />
+
             <input
               style={styles.input}
               placeholder="Кількість"
@@ -183,9 +205,15 @@ function MainScreen({
               min="1"
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
+              disabled={isTransferLoading}
             />
+
             <button
-              style={styles.greenButton}
+              style={{
+                ...styles.greenButton,
+                opacity: isTransferLoading ? 0.7 : 1,
+                cursor: isTransferLoading ? 'default' : 'pointer',
+              }}
               onClick={handleTransfer}
               disabled={isTransferLoading}
             >
@@ -193,7 +221,10 @@ function MainScreen({
             </button>
 
             {transferStatus && (
-              <p style={styles.transferStatus}>{transferStatus}</p>
+              <Toast
+                message={transferStatus}
+                type={transferStatus.includes('успішно') ? 'success' : 'error'}
+              />
             )}
           </div>
 
@@ -222,7 +253,6 @@ function MainScreen({
     </section>
   );
 }
-
 // Екран QR
 function QRScreen({ setScreen }) {
   const { user } = useAuth();
@@ -235,15 +265,16 @@ function QRScreen({ setScreen }) {
       try {
         setLoading(true);
         setError(null);
+
         const data = await getQrPayload();
         setQrData(data);
-      } catch (err) {
-        console.error('Failed to fetch QR data:', err);
+      } catch {
         setError('Не вдалося завантажити QR-код');
       } finally {
         setLoading(false);
       }
     }
+
     fetchQrData();
   }, []);
 
@@ -273,9 +304,11 @@ function QRScreen({ setScreen }) {
 
             <div style={styles.infoCard}>
               <p style={styles.infoText}>Клієнт: {user?.name || 'Невідомо'}</p>
+
               <p style={styles.infoText}>
                 Телефон: {user?.phone || 'Невідомо'}
               </p>
+
               <p style={styles.infoText}>
                 ID: {user?.id?.substring(0, 8) || 'Невідомо'}
               </p>

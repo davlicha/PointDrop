@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { register } from '../services/authService';
 import { AUTH_TEXT } from '../constants/uiText';
+import Toast from '../components/Toast';
 
 // Сторінка входу та реєстрації
 function LoginPage() {
@@ -93,14 +94,7 @@ function LoginPage() {
         </h1>
 
         {/* Повідомлення про помилку */}
-        {error && (
-          <div style={styles.errorBox}>
-            <span style={styles.errorTitle}>{AUTH_TEXT.errorTitle}</span>
-
-            <span style={styles.errorText}>{error}</span>
-          </div>
-        )}
-
+        {error && <Toast message={error} type="error" />}
         {/* Форма */}
         <form onSubmit={handleSubmit} style={styles.form}>
           {/* Email */}
