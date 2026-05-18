@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
@@ -9,16 +10,23 @@ function MainLayout({ children, backendOk }) {
   // Дані авторизації
   const { logout, isAuthenticated } = useAuth();
 
+  // Активний hover для links
+  const [hoveredLink, setHoveredLink] = useState(null);
+
+  // Hover для кнопки виходу
+  const [isLogoutHovered, setIsLogoutHovered] = useState(false);
+
   // Вихід з акаунта
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  // Стиль активного посилання
-  const getLinkStyle = ({ isActive }) => ({
+  // Стиль посилання
+  const getLinkStyle = (path, isActive) => ({
     ...styles.link,
     ...(isActive ? styles.activeLink : {}),
+    ...(hoveredLink === path && !isActive ? styles.hoverLink : {}),
   });
 
   return (
@@ -42,16 +50,34 @@ function MainLayout({ children, backendOk }) {
 
           {/* Навігація */}
           <div style={styles.links}>
-            <NavLink to="/" style={getLinkStyle}>
+            <NavLink
+              to="/"
+              style={({ isActive }) => getLinkStyle('/', isActive)}
+              onMouseEnter={() => setHoveredLink('/')}
+              onMouseLeave={() => setHoveredLink(null)}
+            >
               Головна
             </NavLink>
 
-            <NavLink to="/transactions" style={getLinkStyle}>
+            <NavLink
+              to="/transactions"
+              style={({ isActive }) => getLinkStyle('/transactions', isActive)}
+              onMouseEnter={() => setHoveredLink('/transactions')}
+              onMouseLeave={() => setHoveredLink(null)}
+            >
               Транзакції
             </NavLink>
 
             {isAuthenticated && (
-              <button style={styles.logoutButton} onClick={handleLogout}>
+              <button
+                style={{
+                  ...styles.logoutButton,
+                  ...(isLogoutHovered ? styles.logoutButtonHover : {}),
+                }}
+                onClick={handleLogout}
+                onMouseEnter={() => setIsLogoutHovered(true)}
+                onMouseLeave={() => setIsLogoutHovered(false)}
+              >
                 Вийти
               </button>
             )}
@@ -140,11 +166,17 @@ const styles = {
     fontWeight: '500',
     padding: '4px 5px',
     borderRadius: '8px',
+    transition: '0.2s ease',
   },
 
   // Активне посилання
   activeLink: {
     background: '#2F7D1F',
+  },
+
+  // Hover посилання
+  hoverLink: {
+    background: '#2A2A2A',
   },
 
   // Кнопка виходу
@@ -157,6 +189,12 @@ const styles = {
     cursor: 'pointer',
     fontSize: '10px',
     whiteSpace: 'nowrap',
+    transition: '0.2s ease',
+  },
+
+  // Hover кнопки виходу
+  logoutButtonHover: {
+    background: '#A63A3A',
   },
 
   // Основний контент
