@@ -10,6 +10,9 @@ import MainApp from './pages/MainApp';
 // Сторінка авторизації
 import LoginPage from './pages/LoginPage';
 
+// Сторінка 404
+import NotFoundPage from './pages/NotFoundPage';
+
 // Таблиця транзакцій
 import TransactionTable from './components/TransactionTable';
 
@@ -56,11 +59,18 @@ function TransactionsPage() {
 
 // Захищений route
 function ProtectedRoute({ children }) {
+  // Дані авторизації
   const { isAuthenticated, loading } = useAuth();
 
   // Loader під час перевірки auth
   if (loading) {
-    return <p>Завантаження...</p>;
+    return (
+      // Центрування loader
+      <div style={loaderStyles.wrapper}>
+        {/* Текст loader */}
+        <p style={loaderStyles.text}>Завантаження...</p>
+      </div>
+    );
   }
 
   // Redirect на login
@@ -68,8 +78,30 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/login" replace />;
   }
 
+  // Доступ до сторінки
   return children;
 }
+
+// Стилі loader
+const loaderStyles = {
+  // Контейнер loader
+  wrapper: {
+    width: '390px',
+    minHeight: '844px',
+    background: '#3B3940',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    color: '#FFFFFF',
+  },
+
+  // Текст loader
+  text: {
+    fontSize: '18px',
+    fontWeight: '600',
+    margin: 0,
+  },
+};
 
 // Стилі сторінки транзакцій
 const transactionsPageStyles = {
@@ -150,6 +182,9 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
+
+          {/* 404 сторінка */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </MainLayout>
     </BrowserRouter>
@@ -166,4 +201,5 @@ function App() {
   );
 }
 
+// Експорт додатку
 export default App;

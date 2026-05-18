@@ -1,8 +1,8 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 // Базовий layout додатку
-function MainLayout({ children, backendStatus, backendOk }) {
+function MainLayout({ children, backendOk }) {
   // Навігація після виходу
   const navigate = useNavigate();
 
@@ -15,6 +15,12 @@ function MainLayout({ children, backendStatus, backendOk }) {
     navigate('/login');
   };
 
+  // Стиль активного посилання
+  const getLinkStyle = ({ isActive }) => ({
+    ...styles.link,
+    ...(isActive ? styles.activeLink : {}),
+  });
+
   return (
     <div style={styles.wrapper}>
       {/* Верхня панель */}
@@ -24,25 +30,25 @@ function MainLayout({ children, backendStatus, backendOk }) {
 
         {/* Права частина панелі */}
         <div style={styles.rightBlock}>
-          {/* Статус бекенду */}
+          {/* Статус API */}
           <span
             style={{
               ...styles.status,
               color: backendOk ? '#7ED957' : '#FF6B6B',
             }}
           >
-            {backendStatus}
+            {backendOk ? 'API OK' : 'API OFF'}
           </span>
 
           {/* Навігація */}
           <div style={styles.links}>
-            <Link to="/" style={styles.link}>
+            <NavLink to="/" style={getLinkStyle}>
               Головна
-            </Link>
+            </NavLink>
 
-            <Link to="/transactions" style={styles.link}>
+            <NavLink to="/transactions" style={getLinkStyle}>
               Транзакції
-            </Link>
+            </NavLink>
 
             {isAuthenticated && (
               <button style={styles.logoutButton} onClick={handleLogout}>
@@ -59,8 +65,9 @@ function MainLayout({ children, backendStatus, backendOk }) {
   );
 }
 
+// Стилі layout
 const styles = {
-  // Загальна обгортка сторінки
+  // Загальна обгортка
   wrapper: {
     minHeight: '100vh',
     background: '#1E1E1E',
@@ -74,52 +81,70 @@ const styles = {
   // Верхня панель
   nav: {
     width: '420px',
-    maxWidth: '90%',
-    height: '56px',
+    maxWidth: '92%',
+    minHeight: '56px',
     background: '#111111',
     borderRadius: '18px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '0 18px',
+    padding: '0 10px',
     boxSizing: 'border-box',
     marginBottom: '20px',
     border: '1px solid #2A2A2A',
+    gap: '6px',
+    overflow: 'hidden',
   },
 
   // Назва проєкту
   brand: {
     color: '#FFFFFF',
-    fontSize: '16px',
+    fontSize: '13px',
     fontWeight: '700',
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
   },
 
-  // Права частина шапки
+  // Права частина navbar
   rightBlock: {
     display: 'flex',
     alignItems: 'center',
-    gap: '16px',
+    gap: '6px',
+    minWidth: 0,
+    flex: 1,
+    justifyContent: 'flex-end',
   },
 
-  // Текст статусу бекенду
+  // Статус API
   status: {
-    fontSize: '11px',
-    fontWeight: '500',
+    fontSize: '8px',
+    fontWeight: '600',
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
   },
 
-  // Блок з посиланнями
+  // Блок посилань
   links: {
     display: 'flex',
     alignItems: 'center',
-    gap: '18px',
+    gap: '6px',
+    whiteSpace: 'nowrap',
+    minWidth: 0,
   },
 
-  // Стиль посилань
+  // Посилання
   link: {
     color: '#FFFFFF',
     textDecoration: 'none',
-    fontSize: '13px',
+    fontSize: '10px',
     fontWeight: '500',
+    padding: '4px 5px',
+    borderRadius: '8px',
+  },
+
+  // Активне посилання
+  activeLink: {
+    background: '#2F7D1F',
   },
 
   // Кнопка виходу
@@ -127,13 +152,14 @@ const styles = {
     background: '#8B2E2E',
     color: '#FFFFFF',
     border: 'none',
-    borderRadius: '10px',
-    padding: '8px 12px',
+    borderRadius: '8px',
+    padding: '5px 8px',
     cursor: 'pointer',
-    fontSize: '12px',
+    fontSize: '10px',
+    whiteSpace: 'nowrap',
   },
 
-  // Контент під верхньою панеллю
+  // Основний контент
   main: {
     width: '100%',
     display: 'flex',
