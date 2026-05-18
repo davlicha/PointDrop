@@ -67,6 +67,9 @@ function ProtectedRoute({ children }) {
     return (
       // Центрування loader
       <div style={loaderStyles.wrapper}>
+        {/* Spinner */}
+        <div style={loaderStyles.spinner}></div>
+
         {/* Текст loader */}
         <p style={loaderStyles.text}>Завантаження...</p>
       </div>
@@ -100,6 +103,15 @@ const loaderStyles = {
     fontSize: '18px',
     fontWeight: '600',
     margin: 0,
+  },
+  // Spinner
+  spinner: {
+    width: '42px',
+    height: '42px',
+    border: '4px solid #2A2A2A',
+    borderTop: '4px solid #2F7D1F',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
   },
 };
 

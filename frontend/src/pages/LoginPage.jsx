@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { register } from '../services/authService';
+import { AUTH_TEXT } from '../constants/uiText';
 
 // Сторінка входу та реєстрації
 function LoginPage() {
@@ -43,28 +44,35 @@ function LoginPage() {
     }
 
     if (err.code === 'ERR_NETWORK') {
-      return 'Бекенд недоступний. Спробуйте пізніше.';
+      return AUTH_TEXT.networkError;
     }
 
-    return 'Сталася помилка. Перевірте дані та спробуйте ще раз.';
+    return AUTH_TEXT.defaultError;
   };
 
   // Відправка форми
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setError('');
     setLoading(true);
 
     try {
+      // Реєстрація
       if (isRegister) {
         await register(formData);
       }
 
+      // Авторизація
       await login(formData.email, formData.password);
+
+      // Перехід на головну
       navigate('/');
     } catch (err) {
+      // Встановлення тексту помилки
       setError(getErrorMessage(err));
     } finally {
+      // Вимкнення loader
       setLoading(false);
     }
   };
@@ -77,36 +85,42 @@ function LoginPage() {
 
   return (
     <section style={styles.wrapper}>
+      {/* Картка форми */}
       <div style={styles.card}>
         {/* Заголовок */}
-        <h1 style={styles.title}>{isRegister ? 'Реєстрація' : 'Вхід'}</h1>
+        <h1 style={styles.title}>
+          {isRegister ? AUTH_TEXT.register : AUTH_TEXT.login}
+        </h1>
 
         {/* Повідомлення про помилку */}
         {error && (
           <div style={styles.errorBox}>
-            <span style={styles.errorTitle}>Помилка</span>
+            <span style={styles.errorTitle}>{AUTH_TEXT.errorTitle}</span>
+
             <span style={styles.errorText}>{error}</span>
           </div>
         )}
 
         {/* Форма */}
         <form onSubmit={handleSubmit} style={styles.form}>
+          {/* Email */}
           <input
             style={styles.input}
             type="email"
             name="email"
-            placeholder="Email"
+            placeholder={AUTH_TEXT.email}
             value={formData.email}
             onChange={handleChange}
             disabled={loading}
             required
           />
 
+          {/* Пароль */}
           <input
             style={styles.input}
             type="password"
             name="password"
-            placeholder="Пароль"
+            placeholder={AUTH_TEXT.password}
             value={formData.password}
             onChange={handleChange}
             disabled={loading}
@@ -114,24 +128,27 @@ function LoginPage() {
             minLength={6}
           />
 
+          {/* Поля реєстрації */}
           {isRegister && (
             <>
+              {/* Ім’я */}
               <input
                 style={styles.input}
                 type="text"
                 name="name"
-                placeholder="Ваше ім'я"
+                placeholder={AUTH_TEXT.name}
                 value={formData.name}
                 onChange={handleChange}
                 disabled={loading}
                 required
               />
 
+              {/* Телефон */}
               <input
                 style={styles.input}
                 type="tel"
                 name="phone"
-                placeholder="Телефон (+380...)"
+                placeholder={AUTH_TEXT.phone}
                 value={formData.phone}
                 onChange={handleChange}
                 disabled={loading}
@@ -140,20 +157,22 @@ function LoginPage() {
             </>
           )}
 
+          {/* Кнопка submit */}
           <button
             style={{
               ...styles.submitButton,
               opacity: loading ? 0.7 : 1,
               cursor: loading ? 'default' : 'pointer',
+              background: loading ? '#245F18' : '#2F7D1F',
             }}
             type="submit"
             disabled={loading}
           >
             {loading
-              ? 'Завантаження...'
+              ? AUTH_TEXT.loading
               : isRegister
-                ? 'Зареєструватися'
-                : 'Увійти'}
+                ? AUTH_TEXT.registerButton
+                : AUTH_TEXT.loginButton}
           </button>
         </form>
 
@@ -163,16 +182,16 @@ function LoginPage() {
           onClick={handleModeSwitch}
           disabled={loading}
         >
-          {isRegister
-            ? 'Вже є акаунт? Увійти'
-            : 'Немає акаунту? Зареєструватися'}
+          {isRegister ? AUTH_TEXT.switchToLogin : AUTH_TEXT.switchToRegister}
         </button>
       </div>
     </section>
   );
 }
 
+// Стилі
 const styles = {
+  // Wrapper сторінки
   wrapper: {
     width: '390px',
     minHeight: '600px',
@@ -185,6 +204,7 @@ const styles = {
     justifyContent: 'center',
   },
 
+  // Картка
   card: {
     width: '100%',
     background: '#1A1A1D',
@@ -193,6 +213,7 @@ const styles = {
     boxSizing: 'border-box',
   },
 
+  // Заголовок
   title: {
     color: '#FFFFFF',
     fontSize: '24px',
@@ -200,6 +221,7 @@ const styles = {
     textAlign: 'center',
   },
 
+  // Блок помилки
   errorBox: {
     background: '#3A1F1F',
     border: '1px solid #FF6B6B',
@@ -211,38 +233,43 @@ const styles = {
     gap: '4px',
   },
 
+  // Заголовок помилки
   errorTitle: {
     color: '#FF6B6B',
     fontSize: '12px',
     fontWeight: '700',
   },
 
+  // Текст помилки
   errorText: {
     color: '#FFFFFF',
     fontSize: '13px',
     lineHeight: '18px',
   },
 
+  // Форма
   form: {
     display: 'flex',
     flexDirection: 'column',
     gap: '16px',
   },
 
+  // Поля вводу
   input: {
     width: '100%',
     background: '#F2F2F2',
-    border: 'none',
+    border: '1px solid #2F7D1F',
     borderRadius: '14px',
     padding: '14px 16px',
     fontSize: '14px',
     boxSizing: 'border-box',
     outline: 'none',
+    transition: '0.2s ease',
   },
 
+  // Кнопка submit
   submitButton: {
     width: '100%',
-    background: '#2F7D1F',
     color: '#FFFFFF',
     border: 'none',
     borderRadius: '16px',
@@ -250,8 +277,10 @@ const styles = {
     fontSize: '14px',
     fontWeight: '600',
     marginTop: '8px',
+    transition: '0.2s ease',
   },
 
+  // Кнопка перемикання
   switchButton: {
     width: '100%',
     background: 'transparent',
@@ -261,6 +290,7 @@ const styles = {
     fontSize: '13px',
     cursor: 'pointer',
     marginTop: '16px',
+    transition: '0.2s ease',
   },
 };
 

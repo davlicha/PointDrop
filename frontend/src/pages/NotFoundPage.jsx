@@ -1,3 +1,5 @@
+import { NOT_FOUND_TEXT } from '../constants/uiText';
+
 // Сторінка 404
 function NotFoundPage() {
   return (
@@ -6,19 +8,17 @@ function NotFoundPage() {
       {/* Картка помилки */}
       <div style={styles.card}>
         {/* Код помилки */}
-        <h1 style={styles.code}>404</h1>
+        <h1 style={styles.code}>{NOT_FOUND_TEXT.code}</h1>
 
         {/* Заголовок */}
-        <h2 style={styles.title}>Сторінку не знайдено</h2>
+        <h2 style={styles.title}>{NOT_FOUND_TEXT.title}</h2>
 
         {/* Опис */}
-        <p style={styles.text}>
-          Такої сторінки не існує або посилання було змінено.
-        </p>
+        <p style={styles.text}>{NOT_FOUND_TEXT.description}</p>
 
         {/* Кнопка повернення */}
         <a href="/" style={styles.button}>
-          Повернутися на головну
+          {NOT_FOUND_TEXT.button}
         </a>
       </div>
     </section>
@@ -30,13 +30,13 @@ const styles = {
   // Mobile-frame як у додатку
   page: {
     width: '390px',
-    minHeight: '700px', // Менша висота
+    minHeight: '700px',
     background: '#3B3940',
-    padding: '90px 18px 28px', // Відступ зверху
+    padding: '90px 18px 28px',
     boxSizing: 'border-box',
     color: '#FFFFFF',
     display: 'flex',
-    justifyContent: 'flex-start', // Картка зверху
+    justifyContent: 'flex-start',
     alignItems: 'center',
   },
 

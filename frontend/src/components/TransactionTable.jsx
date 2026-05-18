@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { TRANSACTIONS_TEXT } from '../constants/uiText';
 
 // Таблиця транзакцій
 function TransactionTable({ transactions = [] }) {
@@ -37,10 +38,11 @@ function TransactionTable({ transactions = [] }) {
   if (transactions.length === 0) {
     return (
       <div style={styles.emptyState}>
-        <p style={styles.emptyTitle}>Транзакцій поки немає</p>
-        <p style={styles.emptyText}>
-          Після переказів або нарахувань вони з’являться тут.
-        </p>
+        {/* Заголовок порожнього стану */}
+        <p style={styles.emptyTitle}>{TRANSACTIONS_TEXT.empty}</p>
+
+        {/* Опис порожнього стану */}
+        <p style={styles.emptyText}>{TRANSACTIONS_TEXT.emptyDescription}</p>
       </div>
     );
   }
@@ -102,11 +104,11 @@ function TransactionTable({ transactions = [] }) {
           onClick={handlePrevPage}
           disabled={currentPage === 1}
         >
-          Назад
+          {TRANSACTIONS_TEXT.previous}
         </button>
 
         <span style={styles.pageInfo}>
-          Сторінка {currentPage} з {totalPages}
+          {`Сторінка ${currentPage} з ${totalPages}`}
         </span>
 
         <button
@@ -118,7 +120,7 @@ function TransactionTable({ transactions = [] }) {
           onClick={handleNextPage}
           disabled={currentPage === totalPages}
         >
-          Далі
+          {TRANSACTIONS_TEXT.next}
         </button>
       </div>
     </div>

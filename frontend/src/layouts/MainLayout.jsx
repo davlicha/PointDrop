@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { NAVBAR_TEXT } from '../constants/uiText';
 
 // Базовий layout додатку
 function MainLayout({ children, backendOk }) {
@@ -10,7 +11,7 @@ function MainLayout({ children, backendOk }) {
   // Дані авторизації
   const { logout, isAuthenticated } = useAuth();
 
-  // Активний hover для links
+  // Hover для посилань
   const [hoveredLink, setHoveredLink] = useState(null);
 
   // Hover для кнопки виходу
@@ -34,7 +35,7 @@ function MainLayout({ children, backendOk }) {
       {/* Верхня панель */}
       <nav style={styles.nav}>
         {/* Назва проєкту */}
-        <div style={styles.brand}>PointDrop</div>
+        <div style={styles.brand}>{NAVBAR_TEXT.brand}</div>
 
         {/* Права частина панелі */}
         <div style={styles.rightBlock}>
@@ -45,7 +46,7 @@ function MainLayout({ children, backendOk }) {
               color: backendOk ? '#7ED957' : '#FF6B6B',
             }}
           >
-            {backendOk ? 'API OK' : 'API OFF'}
+            {backendOk ? NAVBAR_TEXT.apiOk : NAVBAR_TEXT.apiOff}
           </span>
 
           {/* Навігація */}
@@ -56,7 +57,7 @@ function MainLayout({ children, backendOk }) {
               onMouseEnter={() => setHoveredLink('/')}
               onMouseLeave={() => setHoveredLink(null)}
             >
-              Головна
+              {NAVBAR_TEXT.home}
             </NavLink>
 
             <NavLink
@@ -65,7 +66,7 @@ function MainLayout({ children, backendOk }) {
               onMouseEnter={() => setHoveredLink('/transactions')}
               onMouseLeave={() => setHoveredLink(null)}
             >
-              Транзакції
+              {NAVBAR_TEXT.transactions}
             </NavLink>
 
             {isAuthenticated && (
@@ -78,7 +79,7 @@ function MainLayout({ children, backendOk }) {
                 onMouseEnter={() => setIsLogoutHovered(true)}
                 onMouseLeave={() => setIsLogoutHovered(false)}
               >
-                Вийти
+                {NAVBAR_TEXT.logout}
               </button>
             )}
           </div>
