@@ -1,23 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { register } from '../services/authService';
+import { register as registerApi } from '../services/authService';
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 
-// Сторінка входу та реєстрації
 function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  // Режим форми
   const [isRegister, setIsRegister] = useState(false);
-
-  // Стан завантаження
   const [loading, setLoading] = useState(false);
-
-  // Текст помилки
   const [error, setError] = useState('');
 
-  // Дані форми
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -25,31 +20,10 @@ function LoginPage() {
     phone: '',
   });
 
-  // Оновлення полів
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Отримання повідомлення помилки
-  const getErrorMessage = (err) => {
-    const serverMessage = err.response?.data?.message;
-
-    if (Array.isArray(serverMessage)) {
-      return serverMessage.join(', ');
-    }
-
-    if (serverMessage) {
-      return serverMessage;
-    }
-
-    if (err.code === 'ERR_NETWORK') {
-      return 'Бекенд недоступний. Спробуйте пізніше.';
-    }
-
-    return 'Сталася помилка. Перевірте дані та спробуйте ще раз.';
-  };
-
-  // Відправка форми
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -57,211 +31,120 @@ function LoginPage() {
 
     try {
       if (isRegister) {
-        await register(formData);
+        await registerApi(formData);
+        // Після реєстрації автоматично логінимось
+        await login(formData.email, formData.password);
+      } else {
+        await login(formData.email, formData.password);
       }
-
-      await login(formData.email, formData.password);
       navigate('/');
     } catch (err) {
-      setError(getErrorMessage(err));
+      const message = err.response?.data?.message || 'Помилка авторизації';
+      setError(Array.isArray(message) ? message.join(', ') : message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Перемикання режиму
-  const handleModeSwitch = () => {
-    setIsRegister(!isRegister);
-    setError('');
-  };
-
   return (
-    <section style={styles.wrapper}>
-      <div style={styles.card}>
-        {/* Заголовок */}
-        <h1 style={styles.title}>{isRegister ? 'Реєстрація' : 'Вхід'}</h1>
-
-        {/* Повідомлення про помилку */}
-        {error && (
-          <div style={styles.errorBox}>
-            <span style={styles.errorTitle}>Помилка</span>
-            <span style={styles.errorText}>{error}</span>
+    <section className="app-container" style={{ padding: '40px 20px', justifyContent: 'center' }}>
+      <div className="glass-card animate-fade-in" style={{ padding: '32px 24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+          <div style={{ 
+            width: '64px', height: '64px', 
+            borderRadius: '16px', 
+            background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)',
+            display: 'flex', justifyContent: 'center', alignItems: 'center',
+            boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)'
+          }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
           </div>
-        )}
+        </div>
+        
+        <h1 className="section-title" style={{ fontSize: '24px', justifyContent: 'center', marginBottom: '8px' }}>
+          {isRegister ? 'Створити акаунт' : 'З поверненням'}
+        </h1>
+        
+        <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '14px' }}>
+          {isRegister ? 'Приєднуйтесь до системи лояльності PointDrop' : 'Увійдіть у свій акаунт PointDrop'}
+        </p>
 
-        {/* Форма */}
-        <form onSubmit={handleSubmit} style={styles.form}>
+        {error && <div className="notice-error" style={{ background: 'var(--danger-light)', padding: '12px', borderRadius: '12px', textAlign: 'center' }}>{error}</div>}
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <input
-            style={styles.input}
+            className="input-base"
             type="email"
             name="email"
             placeholder="Email"
             value={formData.email}
             onChange={handleChange}
-            disabled={loading}
             required
+            style={{ marginBottom: 0 }}
           />
 
           <input
-            style={styles.input}
+            className="input-base"
             type="password"
             name="password"
             placeholder="Пароль"
             value={formData.password}
             onChange={handleChange}
-            disabled={loading}
             required
             minLength={6}
+            style={{ marginBottom: 0 }}
           />
 
           {isRegister && (
-            <>
+            <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <input
-                style={styles.input}
+                className="input-base"
                 type="text"
                 name="name"
                 placeholder="Ваше ім'я"
                 value={formData.name}
                 onChange={handleChange}
-                disabled={loading}
                 required
+                style={{ marginBottom: 0 }}
               />
 
-              <input
-                style={styles.input}
-                type="tel"
-                name="phone"
-                placeholder="Телефон (+380...)"
+              <PhoneInput
+                className="input-base"
+                placeholder="Телефон"
                 value={formData.phone}
-                onChange={handleChange}
-                disabled={loading}
+                onChange={(value) => setFormData({ ...formData, phone: value })}
+                defaultCountry="UA"
+                international
+                countryCallingCodeEditable={false}
                 required
+                style={{ marginBottom: 0 }}
               />
-            </>
+            </div>
           )}
 
           <button
-            style={{
-              ...styles.submitButton,
-              opacity: loading ? 0.7 : 1,
-              cursor: loading ? 'default' : 'pointer',
-            }}
+            className="btn btn-primary btn-full"
             type="submit"
             disabled={loading}
+            style={{ marginTop: '8px', padding: '14px' }}
           >
-            {loading
-              ? 'Завантаження...'
-              : isRegister
-                ? 'Зареєструватися'
-                : 'Увійти'}
+            {loading ? 'Обробка...' : (isRegister ? 'Зареєструватися' : 'Увійти')}
           </button>
         </form>
 
-        {/* Перемикач форми */}
         <button
-          style={styles.switchButton}
-          onClick={handleModeSwitch}
-          disabled={loading}
+          className="btn btn-ghost btn-full"
+          onClick={() => {
+            setIsRegister(!isRegister);
+            setError('');
+          }}
+          style={{ marginTop: '16px' }}
         >
-          {isRegister
-            ? 'Вже є акаунт? Увійти'
-            : 'Немає акаунту? Зареєструватися'}
+          {isRegister ? 'Вже є акаунт? Увійти' : 'Немає акаунту? Створити'}
         </button>
       </div>
     </section>
   );
 }
-
-const styles = {
-  wrapper: {
-    width: '390px',
-    minHeight: '600px',
-    background: '#3B3940',
-    padding: '40px 24px',
-    boxSizing: 'border-box',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  card: {
-    width: '100%',
-    background: '#1A1A1D',
-    borderRadius: '18px',
-    padding: '32px 24px',
-    boxSizing: 'border-box',
-  },
-
-  title: {
-    color: '#FFFFFF',
-    fontSize: '24px',
-    marginBottom: '24px',
-    textAlign: 'center',
-  },
-
-  errorBox: {
-    background: '#3A1F1F',
-    border: '1px solid #FF6B6B',
-    borderRadius: '12px',
-    padding: '12px',
-    marginBottom: '16px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-  },
-
-  errorTitle: {
-    color: '#FF6B6B',
-    fontSize: '12px',
-    fontWeight: '700',
-  },
-
-  errorText: {
-    color: '#FFFFFF',
-    fontSize: '13px',
-    lineHeight: '18px',
-  },
-
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px',
-  },
-
-  input: {
-    width: '100%',
-    background: '#F2F2F2',
-    border: 'none',
-    borderRadius: '14px',
-    padding: '14px 16px',
-    fontSize: '14px',
-    boxSizing: 'border-box',
-    outline: 'none',
-  },
-
-  submitButton: {
-    width: '100%',
-    background: '#2F7D1F',
-    color: '#FFFFFF',
-    border: 'none',
-    borderRadius: '16px',
-    padding: '14px',
-    fontSize: '14px',
-    fontWeight: '600',
-    marginTop: '8px',
-  },
-
-  switchButton: {
-    width: '100%',
-    background: 'transparent',
-    color: '#AAAAAA',
-    border: 'none',
-    padding: '12px',
-    fontSize: '13px',
-    cursor: 'pointer',
-    marginTop: '16px',
-  },
-};
 
 export default LoginPage;

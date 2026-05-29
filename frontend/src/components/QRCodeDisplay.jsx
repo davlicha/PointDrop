@@ -38,7 +38,7 @@ function QRCodeDisplay({ value, size = 100 }) {
 
   if (loading) {
     return (
-      <div style={styles.placeholder}>
+      <div className="notice-success" style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card-bg-solid)', borderRadius: '16px' }}>
         <span>Завантаження...</span>
       </div>
     );
@@ -46,7 +46,7 @@ function QRCodeDisplay({ value, size = 100 }) {
 
   if (error) {
     return (
-      <div style={styles.error}>
+      <div className="notice-error" style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--danger-light)', borderRadius: '16px', padding: '16px', textAlign: 'center' }}>
         <span>{error}</span>
       </div>
     );
@@ -58,36 +58,9 @@ function QRCodeDisplay({ value, size = 100 }) {
       size={size}
       level="M"
       includeMargin={true}
+      style={{ borderRadius: '12px' }}
     />
   );
 }
-
-const styles = {
-  placeholder: {
-    width: '100px',
-    height: '100px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: '#f0f0f0',
-    borderRadius: '8px',
-    fontSize: '12px',
-    color: '#666',
-  },
-  error: {
-    width: '100px',
-    height: '100px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: '#ffe6e6',
-    borderRadius: '8px',
-    fontSize: '11px',
-    color: '#8B2E2E',
-    textAlign: 'center',
-    padding: '8px',
-    boxSizing: 'border-box',
-  },
-};
 
 export default QRCodeDisplay;
