@@ -1,17 +1,30 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 // Базовий layout додатку
 function MainLayout({ children, backendStatus, backendOk }) {
+  // Навігація після виходу
+  const navigate = useNavigate();
+
+  // Дані авторизації
+  const { logout, isAuthenticated } = useAuth();
+
+  // Вихід з акаунта
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
     <div style={styles.wrapper}>
-      {/* Верхня навігаційна панель */}
+      {/* Верхня панель */}
       <nav style={styles.nav}>
         {/* Назва проєкту */}
         <div style={styles.brand}>PointDrop</div>
 
         {/* Права частина панелі */}
         <div style={styles.rightBlock}>
-          {/* Статус з'єднання з бекендом */}
+          {/* Статус бекенду */}
           <span
             style={{
               ...styles.status,
@@ -21,7 +34,7 @@ function MainLayout({ children, backendStatus, backendOk }) {
             {backendStatus}
           </span>
 
-          {/* Навігаційні посилання */}
+          {/* Навігація */}
           <div style={styles.links}>
             <Link to="/" style={styles.link}>
               Головна
@@ -30,11 +43,17 @@ function MainLayout({ children, backendStatus, backendOk }) {
             <Link to="/transactions" style={styles.link}>
               Транзакції
             </Link>
+
+            {isAuthenticated && (
+              <button style={styles.logoutButton} onClick={handleLogout}>
+                Вийти
+              </button>
+            )}
           </div>
         </div>
       </nav>
 
-      {/* Основний контент сторінки */}
+      {/* Основний контент */}
       <main style={styles.main}>{children}</main>
     </div>
   );
@@ -101,6 +120,17 @@ const styles = {
     textDecoration: 'none',
     fontSize: '13px',
     fontWeight: '500',
+  },
+
+  // Кнопка виходу
+  logoutButton: {
+    background: '#8B2E2E',
+    color: '#FFFFFF',
+    border: 'none',
+    borderRadius: '10px',
+    padding: '8px 12px',
+    cursor: 'pointer',
+    fontSize: '12px',
   },
 
   // Контент під верхньою панеллю
