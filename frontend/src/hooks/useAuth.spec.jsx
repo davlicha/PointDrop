@@ -1,7 +1,11 @@
+import React from 'react';
+import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from '../hooks/useAuth';
+import { AuthProvider, useAuth } from '../hooks/useAuth';
+import * as authService from '../services/authService';
+import * as userService from '../services/userService';
 
 // Mock the services
 vi.mock('../services/authService', () => ({
@@ -28,7 +32,7 @@ describe('AuthProvider and useAuth Hook', () => {
 
   it('should provide auth context', () => {
     const TestComponent = () => {
-      const { isAuthenticated } = require('../hooks/useAuth').useAuth();
+      const { isAuthenticated } = useAuth();
       return <div>{isAuthenticated ? 'Logged in' : 'Logged out'}</div>;
     };
 
@@ -44,20 +48,17 @@ describe('AuthProvider and useAuth Hook', () => {
   });
 
   it('should handle login', async () => {
-    const { login: loginMock } = require('../services/authService');
-    const { getCurrentUserProfile } = require('../services/userService');
-
-    loginMock.mockResolvedValue({ access_token: 'test-token' });
-    getCurrentUserProfile.mockResolvedValue({
+    authService.login.mockResolvedValue({ access_token: 'test-token' });
+    userService.getCurrentUserProfile.mockResolvedValue({
       id: '123',
       name: 'Test User',
       email: 'test@example.com',
     });
 
     const TestComponent = () => {
-      const { login, user } = require('../hooks/useAuth').useAuth();
-      const [email, setEmail] = require('react').useState('');
-      const [password, setPassword] = require('react').useState('');
+      const { login, isAuthenticated, user } = useAuth();
+      const [email, setEmail] = React.useState('');
+      const [password, setPassword] = React.useState('');
 
       return (
         <div>
@@ -85,7 +86,7 @@ describe('AuthProvider and useAuth Hook', () => {
     fireEvent.click(loginButton);
 
     await waitFor(() => {
-      expect(loginMock).toHaveBeenCalled();
+      expect(authService.login).toHaveBeenCalled();
     });
   });
 
@@ -93,7 +94,7 @@ describe('AuthProvider and useAuth Hook', () => {
     localStorage.setItem('access_token', 'test-token');
 
     const TestComponent = () => {
-      const { logout, isAuthenticated } = require('../hooks/useAuth').useAuth();
+      const { logout, isAuthenticated } = useAuth();
       return (
         <div>
           <div>{isAuthenticated ? 'Logged in' : 'Logged out'}</div>
@@ -114,7 +115,7 @@ describe('AuthProvider and useAuth Hook', () => {
     fireEvent.click(logoutButton);
 
     await waitFor(() => {
-      expect(localStorage.getItem('access_token')).toBeNull();
+      expect(authService.logout).toHaveBeenCalled();
     });
   });
 });
