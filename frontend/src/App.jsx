@@ -1,69 +1,27 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-
-// Layout додатку
 import MainLayout from './layouts/MainLayout';
-
-// Головна сторінка
 import MainApp from './pages/MainApp';
-
-// Сторінка авторизації
 import LoginPage from './pages/LoginPage';
+<<<<<<< HEAD
 
 // Сторінка 404
 import NotFoundPage from './pages/NotFoundPage';
 
 // Таблиця транзакцій
+=======
+>>>>>>> 3fb98ba37b5792e35628134c07d90d6cf0f9610d
 import TransactionTable from './components/TransactionTable';
-
-// Auth context
+import { checkHealth } from './services/healthService';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 
-// Health check backend
-import { checkHealth } from './services/healthService';
-
-// Сторінка транзакцій
-function TransactionsPage() {
-  // Тимчасові mock-дані
-  const transactions = [
-    {
-      id: 1,
-      amount: '+100',
-      name: 'Наталі',
-      time: '5 хвилин тому',
-      status: 'Отримано',
-      color: '#2E7D32',
-    },
-    {
-      id: 2,
-      amount: '-50',
-      name: 'Ліза',
-      time: '1 година тому',
-      status: 'Переказано',
-      color: '#8B2E2E',
-    },
-  ];
-
-  return (
-    <div style={transactionsPageStyles.wrapper}>
-      <div style={transactionsPageStyles.phone}>
-        {/* Заголовок */}
-        <h2 style={transactionsPageStyles.title}>Історія транзакцій</h2>
-
-        {/* Таблиця транзакцій */}
-        <TransactionTable transactions={transactions} />
-      </div>
-    </div>
-  );
-}
-
-// Захищений route
+// Захищений роут
 function ProtectedRoute({ children }) {
   // Дані авторизації
   const { isAuthenticated, loading } = useAuth();
 
-  // Loader під час перевірки auth
   if (loading) {
+<<<<<<< HEAD
     return (
       // Центрування loader
       <div style={loaderStyles.wrapper}>
@@ -74,9 +32,11 @@ function ProtectedRoute({ children }) {
         <p style={loaderStyles.text}>Завантаження...</p>
       </div>
     );
+=======
+    return <div style={{ color: '#fff', padding: '20px' }}>Завантаження...</div>;
+>>>>>>> 3fb98ba37b5792e35628134c07d90d6cf0f9610d
   }
 
-  // Redirect на login
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
@@ -85,6 +45,7 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+<<<<<<< HEAD
 // Стилі loader
 const loaderStyles = {
   // Контейнер loader
@@ -123,39 +84,46 @@ const transactionsPageStyles = {
     justifyContent: 'center',
     width: '100%',
   },
+=======
+// Сторінка історії транзакцій
+function TransactionsPage() {
+  const [transactions, setTransactions] = useState([]);
+  
+  useEffect(() => {
+    import('./services/transactionService').then(({ getMyTransactions }) => {
+      getMyTransactions().then(data => {
+        const mapped = data.map(t => ({
+          id: t.id,
+          amount: t.type === 'EARN' || t.receiverId === t.id ? '+' + t.amount : '-' + t.amount,
+          name: t.type,
+          time: new Date(t.timestamp).toLocaleString(),
+          status: t.type,
+          color: t.type === 'EARN' || t.receiverId === t.id ? '#10b981' : '#ef4444',
+        }));
+        setTransactions(mapped);
+      }).catch(console.error);
+    });
+  }, []);
+>>>>>>> 3fb98ba37b5792e35628134c07d90d6cf0f9610d
 
-  // Контейнер екрана
-  phone: {
-    width: '390px',
-    minHeight: '844px',
-    background: '#3B3940',
-    padding: '24px 18px 28px',
-    boxSizing: 'border-box',
-    color: '#FFFFFF',
-  },
+  return (
+    <div className="page-section">
+      <h2 className="section-title">Історія транзакцій</h2>
+      <TransactionTable transactions={transactions} />
+    </div>
+  );
+}
 
-  // Заголовок
-  title: {
-    margin: '0 0 20px 0',
-    fontSize: '20px',
-    color: '#FFFFFF',
-  },
-};
-
-// Основний routing
+// Внутрішній компонент додатку
 function AppContent() {
-  // Статус backend
   const [backendStatus, setBackendStatus] = useState('Перевірка...');
-
-  // Стан backend
   const [backendOk, setBackendOk] = useState(false);
+  const { isAuthenticated } = useAuth();
 
-  // Перевірка backend
   useEffect(() => {
     async function loadBackendStatus() {
       try {
         await checkHealth();
-
         setBackendStatus('Backend: OK');
         setBackendOk(true);
       } catch {
@@ -168,7 +136,46 @@ function AppContent() {
   }, []);
 
   return (
+    <Routes>
+      <Route
+        path="/login"
+        element={
+          isAuthenticated ? <Navigate to="/" replace /> : (
+            <MainLayout backendStatus={backendStatus} backendOk={backendOk}>
+              <LoginPage />
+            </MainLayout>
+          )
+        }
+      />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <MainLayout backendStatus={backendStatus} backendOk={backendOk}>
+              <MainApp />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/transactions"
+        element={
+          <ProtectedRoute>
+            <MainLayout backendStatus={backendStatus} backendOk={backendOk}>
+              <TransactionsPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
+  );
+}
+
+// Головний компонент
+function App() {
+  return (
     <BrowserRouter>
+<<<<<<< HEAD
       {/* Layout */}
       <MainLayout backendStatus={backendStatus} backendOk={backendOk}>
         <Routes>
@@ -199,10 +206,16 @@ function AppContent() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </MainLayout>
+=======
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+>>>>>>> 3fb98ba37b5792e35628134c07d90d6cf0f9610d
     </BrowserRouter>
   );
 }
 
+<<<<<<< HEAD
 // Root App
 function App() {
   return (
@@ -214,4 +227,6 @@ function App() {
 }
 
 // Експорт додатку
+=======
+>>>>>>> 3fb98ba37b5792e35628134c07d90d6cf0f9610d
 export default App;

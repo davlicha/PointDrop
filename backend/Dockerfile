@@ -1,6 +1,5 @@
 # syntax=docker/dockerfile:1.6
 
-# ========== deps ==========
 FROM node:20-alpine AS deps
 WORKDIR /app
 
@@ -10,9 +9,8 @@ COPY package*.json ./
 COPY prisma ./prisma
 COPY prisma.config.ts ./
 
-RUN npm ci
+RUN npm install
 
-# ========== builder ==========
 FROM node:20-alpine AS builder
 WORKDIR /app
 
@@ -24,7 +22,6 @@ COPY . .
 RUN DATABASE_URL="postgresql://placeholder:5432/placeholder" npx prisma generate \
     && npm run build
 
-# ========== runner ==========
 FROM node:20-alpine AS runner
 WORKDIR /app
 
