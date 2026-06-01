@@ -10,11 +10,11 @@
   --card-bg: #ffffff;
   --card-bg-solid: #ffffff;
   --card-border: #e2e8f0;
-  
+
   --primary: #10b981; /* Emerald */
   --primary-hover: #059669;
   --primary-light: rgba(16, 185, 129, 0.15);
-  
+
   --danger: #ef4444; /* Red */
   --danger-hover: #dc2626;
   --danger-light: rgba(239, 68, 68, 0.15);
@@ -27,23 +27,25 @@
 
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-lg:
+    0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-glow: 0 0 15px rgba(16, 185, 129, 0.3);
 }
 
 /* Force Dark Theme as default for this premium app */
-:root, [data-theme="dark"] {
+:root,
+[data-theme='dark'] {
   --bg-color: #09090b; /* Very dark slate */
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --card-bg: rgba(255, 255, 255, 0.03);
   --card-bg-solid: #111111; /* Made it darker for better contrast */
   --card-border: rgba(255, 255, 255, 0.08);
-  
+
   --primary: #10b981;
   --primary-hover: #34d399;
   --primary-light: rgba(16, 185, 129, 0.15);
-  
+
   --danger: #ef4444;
   --danger-hover: #f87171;
   --danger-light: rgba(239, 68, 68, 0.15);
@@ -55,7 +57,8 @@
   --input-border: rgba(255, 255, 255, 0.1);
 
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+  --shadow-lg:
+    0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
 }
 
 /* Global Reset */
@@ -77,13 +80,26 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.08) 0%, transparent 50%);
+  background-image:
+    radial-gradient(
+      circle at 15% 50%,
+      rgba(139, 92, 246, 0.08) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 85% 30%,
+      rgba(16, 185, 129, 0.08) 0%,
+      transparent 50%
+    );
   background-attachment: fixed;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-heading);
   font-weight: 600;
   color: var(--text-primary);
@@ -94,20 +110,36 @@ button {
   font-family: var(--font-body);
 }
 
-input, textarea {
+input,
+textarea {
   font-family: var(--font-body);
 }
 
 /* Utility classes for animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-  70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  70% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
 }
 
 .animate-fade-in {
@@ -139,34 +171,17 @@ input, textarea {
     overflow: hidden;
   }
 }
-<<<<<<< HEAD
 h2 {
   font-size: 24px;
   line-height: 118%;
   letter-spacing: -0.24px;
   margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
 }
+
 p {
   margin: 0;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
-}
 /* Анімація spinner */
 @keyframes spin {
   0% {
@@ -177,5 +192,3 @@ code {
     transform: rotate(360deg);
   }
 }
-=======
->>>>>>> 3fb98ba37b5792e35628134c07d90d6cf0f9610d

@@ -17,7 +17,7 @@
   flex-direction: column;
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
 }
 .page-section::-webkit-scrollbar {
   display: none; /* WebKit */
@@ -57,7 +57,8 @@
   backdrop-filter: blur(10px);
 }
 
-.header-left, .header-right {
+.header-left,
+.header-right {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -81,10 +82,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s, transform 0.2s;
+  transition:
+    background-color 0.2s,
+    transform 0.2s;
 }
 
-.icon-btn:hover, .icon-btn:active {
+.icon-btn:hover,
+.icon-btn:active {
   background-color: rgba(255, 255, 255, 0.1);
   transform: scale(1.05);
 }
@@ -125,7 +129,9 @@
   -webkit-backdrop-filter: blur(16px);
   box-shadow: var(--shadow-md);
   margin-bottom: 20px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .glass-card:hover {
@@ -133,7 +139,11 @@
 }
 
 .balance-card {
-  background: linear-gradient(135deg, var(--card-bg-solid) 0%, rgba(39, 39, 42, 0.8) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--card-bg-solid) 0%,
+    rgba(39, 39, 42, 0.8) 100%
+  );
   border: 1px solid var(--card-border);
   position: relative;
   overflow: hidden;
@@ -230,7 +240,9 @@
   font-size: 14px;
   margin-bottom: 14px;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .input-base:focus {
@@ -299,7 +311,11 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary) 0%,
+    var(--primary-hover) 100%
+  );
   color: #fff;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
@@ -310,7 +326,11 @@
 }
 
 .btn-danger {
-  background: linear-gradient(135deg, var(--danger) 0%, var(--danger-hover) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--danger) 0%,
+    var(--danger-hover) 100%
+  );
   color: #fff;
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
@@ -387,7 +407,9 @@
   cursor: pointer;
   padding: 6px;
   box-shadow: var(--shadow-sm);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .qr-mini-btn:hover {
@@ -417,8 +439,14 @@
 }
 
 @keyframes scaleIn {
-  0% { transform: scale(0); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .status-success {
@@ -545,8 +573,12 @@
 }
 
 @keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 /* ====== Side Menu ====== */
@@ -576,8 +608,12 @@
 }
 
 @keyframes slideRight {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0); }
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 .menu-top {
@@ -633,7 +669,9 @@
   border: 1px solid var(--card-border);
   border-radius: 16px;
   padding: 14px 16px;
-  transition: transform 0.2s, background 0.2s;
+  transition:
+    transform 0.2s,
+    background 0.2s;
 }
 
 .tx-card:hover {
@@ -662,8 +700,12 @@
   align-items: center;
 }
 
-.bg-primary-light { background: var(--primary-light); }
-.bg-danger-light { background: var(--danger-light); }
+.bg-primary-light {
+  background: var(--primary-light);
+}
+.bg-danger-light {
+  background: var(--danger-light);
+}
 
 .tx-name {
   font-size: 14px;
@@ -689,8 +731,12 @@
   font-family: var(--font-heading);
 }
 
-.tx-amount-plus { color: var(--primary); }
-.tx-amount-minus { color: var(--text-primary); }
+.tx-amount-plus {
+  color: var(--primary);
+}
+.tx-amount-minus {
+  color: var(--text-primary);
+}
 
 .tx-time {
   font-size: 11px;
