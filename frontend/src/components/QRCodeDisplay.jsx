@@ -8,22 +8,21 @@ function QRCodeDisplay({ value, size = 100 }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Якщо value передано — використовуємо його
     if (value) {
       setQrValue(value);
       return;
     }
 
-    // Інакше отримуємо QR payload з бекенду
     async function fetchQrPayload() {
       try {
         setLoading(true);
+
         const data = await getQrPayload();
+
         setQrValue(data.qr_payload);
         setError(null);
-      } catch (err) {
+      } catch {
         setError('Не вдалося згенерувати QR-код');
-        console.error('QR payload error:', err);
       } finally {
         setLoading(false);
       }
@@ -31,14 +30,25 @@ function QRCodeDisplay({ value, size = 100 }) {
 
     fetchQrPayload();
 
-    // Оновлюємо QR кожні 4 хвилини (payload дійсний 5 хвилин)
     const interval = setInterval(fetchQrPayload, 4 * 60 * 1000);
+
     return () => clearInterval(interval);
   }, [value]);
 
   if (loading) {
     return (
-      <div className="notice-success" style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--card-bg-solid)', borderRadius: '16px' }}>
+      <div
+        className="notice-success"
+        style={{
+          width: size,
+          height: size,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'var(--card-bg-solid)',
+          borderRadius: '16px',
+        }}
+      >
         <span>Завантаження...</span>
       </div>
     );
@@ -46,7 +56,20 @@ function QRCodeDisplay({ value, size = 100 }) {
 
   if (error) {
     return (
-      <div className="notice-error" style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--danger-light)', borderRadius: '16px', padding: '16px', textAlign: 'center' }}>
+      <div
+        className="notice-error"
+        style={{
+          width: size,
+          height: size,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'var(--danger-light)',
+          borderRadius: '16px',
+          padding: '16px',
+          textAlign: 'center',
+        }}
+      >
         <span>{error}</span>
       </div>
     );
@@ -57,7 +80,7 @@ function QRCodeDisplay({ value, size = 100 }) {
       value={qrValue}
       size={size}
       level="M"
-      includeMargin={true}
+      includeMargin
       style={{ borderRadius: '12px' }}
     />
   );
