@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAnalyticsSummary, getTransactionHistory } from '../services/analytics.service';
 import TransactionTable from '../components/analytics/TransactionTable';
+import { useAuth } from '../hooks/useAuth';
 import './MerchantDashboard.css';
 
 const MerchantDashboard = () => {
@@ -20,8 +21,10 @@ const MerchantDashboard = () => {
   const [filterType, setFilterType] = useState('ALL'); // ALL, EARN, REDEEM, TRANSFER
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Fetching the exact seeded merchantId
-  const merchantId = '3041bbed-bf38-4315-8584-8c6353a9f6bf';
+  const { user } = useAuth();
+
+  // merchantId з профілю авторизованого користувача
+  const merchantId = user?.managedMerchants?.[0]?.id;
 
   const fetchSummary = async () => {
     setIsLoadingSummary(true);
@@ -105,7 +108,6 @@ const MerchantDashboard = () => {
               {summary?.totalCustomers?.toLocaleString('uk-UA') || 0}
             </div>
           )}
-          <div className="card-badge">+3 цього тижня</div>
         </div>
         
         <div className="summary-card">

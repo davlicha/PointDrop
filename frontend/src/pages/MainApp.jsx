@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import TransactionTable from '../components/TransactionTable.jsx';
 import QRCodeDisplay from '../components/QRCodeDisplay';
 import { checkHealth } from '../services/healthService';
-import { transferPoints } from '../services/transactionService';
+import { transferPoints, getMyTransactions } from '../services/transactionService';
 import { useAuth } from '../hooks/useAuth';
 import { getQrPayload } from '../services/authService';
 import UserSearch from '../components/UserSearch';
@@ -40,22 +40,20 @@ function App() {
   const [loadingTransactions, setLoadingTransactions] = useState(true);
 
   useEffect(() => {
-    import('../services/transactionService').then(({ getMyTransactions }) => {
-      getMyTransactions()
-        .then((data) => {
-          const mapped = data.map(t => ({
-            id: t.id,
-            amount: t.type === 'EARN' || t.receiverId === t.id ? '+' + t.amount : '-' + t.amount,
-            name: t.type,
-            time: new Date(t.timestamp).toLocaleString(),
-            status: t.type,
-            color: t.type === 'EARN' || t.receiverId === t.id ? '#10b981' : '#ef4444',
-          }));
-          setTransactions(mapped);
-        })
-        .catch(console.error)
-        .finally(() => setLoadingTransactions(false));
-    });
+    getMyTransactions()
+      .then((data) => {
+        const mapped = data.map(t => ({
+          id: t.id,
+          amount: t.type === 'EARN' || t.receiverId === t.id ? '+' + t.amount : '-' + t.amount,
+          name: t.type,
+          time: new Date(t.timestamp).toLocaleString(),
+          status: t.type,
+          color: t.type === 'EARN' || t.receiverId === t.id ? '#10b981' : '#ef4444',
+        }));
+        setTransactions(mapped);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingTransactions(false));
   }, []);
 
   // Відкриває потрібний екран
@@ -258,7 +256,6 @@ function QRScreen({ setScreen }) {
         const data = await getQrPayload();
         setQrData(data);
       } catch (err) {
-        console.error('Failed to fetch QR data:', err);
         setError('Не вдалося завантажити QR-код');
       } finally {
         setLoading(false);
@@ -476,14 +473,16 @@ function IntroScreen({ setScreen }) {
 // Екран меню
 function MenuScreen({ setScreen, transactions }) {
   const { user, refreshUserProfile } = useAuth();
+  const [merchantStatus, setMerchantStatus] = useState('');
   
   const handleMakeMerchant = async () => {
+    setMerchantStatus('');
     try {
       await makeMeMerchant();
       await refreshUserProfile();
-      alert('Успіх! Ви тепер мерчант. Перейдіть в "Режим касира"');
+      setMerchantStatus('Успіх! Ви тепер мерчант. Перейдіть в "Режим касира"');
     } catch (err) {
-      alert('Помилка: ' + (err.response?.data?.message || err.message));
+      setMerchantStatus('Помилка: ' + (err.response?.data?.message || err.message));
     }
   };
 
@@ -527,6 +526,12 @@ function MenuScreen({ setScreen, transactions }) {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
               Режим касира
             </button>
+          )}
+
+          {merchantStatus && (
+            <div className={merchantStatus.startsWith('Успіх') ? 'notice-success' : 'notice-error'} style={{ margin: '8px 0', padding: '10px', borderRadius: '10px', fontSize: '13px' }}>
+              {merchantStatus}
+            </div>
           )}
 
           <button className="menu-item" onClick={() => setScreen('profile')}>

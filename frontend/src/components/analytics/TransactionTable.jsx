@@ -70,7 +70,28 @@ const TransactionTable = ({
   if (transactions.length === 0) {
     return (
       <div className="empty-state">
-        <p>Немає знайдених транзакцій</p>
+        <div style={{
+          display: 'inline-flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: '56px',
+          height: '56px',
+          borderRadius: '50%',
+          background: 'rgba(107, 114, 128, 0.1)',
+          marginBottom: '16px',
+        }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            <line x1="8" y1="11" x2="14" y2="11" />
+          </svg>
+        </div>
+        <p style={{ fontWeight: 500, fontSize: '15px', color: '#ffffff', marginBottom: '6px' }}>
+          Немає знайдених транзакцій
+        </p>
+        <p style={{ fontSize: '13px' }}>
+          Спробуйте змінити фільтри або пошуковий запит
+        </p>
       </div>
     );
   }
@@ -140,4 +161,4 @@ const TransactionTable = ({
   );
 };
 
-export default TransactionTable;
+export default React.memo(TransactionTable);

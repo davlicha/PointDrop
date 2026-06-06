@@ -1,11 +1,11 @@
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 function TransactionTable({ transactions }) {
   // Поточна сторінка
   const [currentPage, setCurrentPage] = useState(1);
 
   // К-сть елементів на сторінці
-  const itemsPerPage = 3; // Increased to 3 since cards will be smaller
+  const itemsPerPage = 3;
 
   // Загальна к-сть сторінок
   const totalPages = Math.ceil(transactions.length / itemsPerPage);
@@ -26,7 +26,31 @@ function TransactionTable({ transactions }) {
   }
 
   if (!transactions || transactions.length === 0) {
-    return <p className="notice-success">Немає транзакцій</p>;
+    return (
+      <div className="glass-card" style={{ textAlign: 'center', padding: '32px 20px' }}>
+        <div style={{
+          display: 'inline-flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: '56px',
+          height: '56px',
+          borderRadius: '50%',
+          background: 'var(--primary-light)',
+          marginBottom: '16px',
+        }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="5" width="20" height="14" rx="2" />
+            <line x1="2" y1="10" x2="22" y2="10" />
+          </svg>
+        </div>
+        <p style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '15px', marginBottom: '6px' }}>
+          Транзакцій ще немає
+        </p>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
+          Ваші транзакції з'являться тут після першого переказу або нарахування балів
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -92,4 +116,4 @@ function TransactionTable({ transactions }) {
   );
 }
 
-export default TransactionTable;
+export default React.memo(TransactionTable);

@@ -27,7 +27,6 @@ export default function UserSearch({ merchantId, onSelectUser }) {
           setError('Користувача не знайдено в системі цього закладу');
         }
       } catch (err) {
-        console.error('Error searching users:', err);
         setError('Помилка пошуку користувачів');
       } finally {
         setLoading(false);
