@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TransactionTable from '../components/TransactionTable.jsx';
 import QRCodeDisplay from '../components/QRCodeDisplay';
+import QRScanner from '../components/QRScanner';
 import { checkHealth } from '../services/healthService';
 import { transferPoints, getMyTransactions } from '../services/transactionService';
 import { useAuth } from '../hooks/useAuth';
@@ -314,8 +315,10 @@ function QRScreen({ setScreen }) {
   );
 }
 
-// Екран сканера (Mock)
+// Екран сканера (Справжній сканер)
 function ScanScreen({ setScreen }) {
+  const [scannedResult, setScannedResult] = useState(null);
+
   return (
     <section className="page-section animate-fade-in">
       <Header
@@ -325,21 +328,46 @@ function ScanScreen({ setScreen }) {
         setScreen={setScreen}
       />
 
-      <div className="center-block">
-        <div style={{ width: '240px', height: '240px', border: '2px dashed var(--primary)', borderRadius: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '32px' }}>
-          <p style={{ color: 'var(--text-secondary)' }}>Камера...</p>
-        </div>
-
-        <p style={{ marginBottom: '32px', color: 'var(--text-secondary)' }}>Наведіть камеру на QR-код користувача</p>
-
-        <div style={{ display: 'flex', gap: '16px', width: '100%' }}>
-          <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => setScreen('success')}>
-            Демо: Успіх
-          </button>
-          <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => setScreen('error')}>
-            Демо: Помилка
-          </button>
-        </div>
+      <div className="center-block" style={{ width: '100%' }}>
+        {!scannedResult ? (
+          <>
+            <p style={{ marginBottom: '24px', color: 'var(--text-secondary)', textAlign: 'center' }}>
+              Наведіть камеру на QR-код
+            </p>
+            <QRScanner 
+              onScanSuccess={(decodedText) => {
+                setScannedResult(decodedText);
+              }}
+            />
+          </>
+        ) : (
+          <div className="glass-card" style={{ textAlign: 'center', width: '100%' }}>
+            <div className="status-icon-lg status-success" style={{ margin: '0 auto 16px' }}>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <h3 style={{ color: 'var(--primary)', marginBottom: '16px' }}>QR код розпізнано!</h3>
+            
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', wordBreak: 'break-all', background: 'var(--bg-color)', padding: '12px', borderRadius: '8px', marginBottom: '24px' }}>
+              {scannedResult}
+            </p>
+            
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button className="btn btn-secondary" style={{ flex: 1, padding: '10px' }} onClick={() => setScannedResult(null)}>
+                Ще раз
+              </button>
+              <button 
+                className="btn btn-primary" 
+                style={{ flex: 1, padding: '10px' }} 
+                onClick={() => {
+                  navigator.clipboard.writeText(scannedResult);
+                  setScreen('main');
+                }}
+              >
+                Копіювати
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
