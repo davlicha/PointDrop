@@ -68,7 +68,7 @@ describe('TransactionsController', () => {
           merchantId: 'merchant-123',
           receiverId: 'user-123',
           senderId: null,
-          timestamp: mockDate,
+          createdAt: mockDate,
         },
         currentBalance: 150,
       };
@@ -84,7 +84,7 @@ describe('TransactionsController', () => {
         amount: 100,
         merchantId: 'merchant-123',
         receiverId: 'user-123',
-        timestamp: mockDate,
+        createdAt: mockDate,
         currentBalance: 150,
       });
     });
@@ -107,7 +107,7 @@ describe('TransactionsController', () => {
           merchantId: 'merchant-123',
           receiverId: 'user-123',
           senderId: null,
-          timestamp: mockDate,
+          createdAt: mockDate,
         },
         currentBalance: 100,
       };
@@ -123,7 +123,7 @@ describe('TransactionsController', () => {
         amount: 50,
         merchantId: 'merchant-123',
         receiverId: 'user-123',
-        timestamp: mockDate,
+        createdAt: mockDate,
         currentBalance: 100,
       });
     });

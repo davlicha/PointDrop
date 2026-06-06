@@ -7,7 +7,7 @@ function MainLayout({ children, backendStatus, backendOk }) {
   const navigate = useNavigate();
 
   // Дані авторизації
-  const { logout, isAuthenticated } = useAuth();
+  const { logout, isAuthenticated, user } = useAuth();
 
   // Вихід з акаунта
   const handleLogout = () => {
@@ -43,6 +43,12 @@ function MainLayout({ children, backendStatus, backendOk }) {
             <Link to="/transactions" style={styles.link}>
               Транзакції
             </Link>
+
+            {user?.role === 'ADMIN' && (
+              <Link to="/dashboard" style={styles.link}>
+                Дашборд
+              </Link>
+            )}
 
             {isAuthenticated && (
               <button style={styles.logoutButton} onClick={handleLogout}>

@@ -4,6 +4,7 @@ import MainLayout from './layouts/MainLayout';
 import MainApp from './pages/MainApp';
 import LoginPage from './pages/LoginPage';
 import TransactionTable from './components/TransactionTable';
+import MerchantDashboard from './pages/MerchantDashboard';
 import { checkHealth } from './services/healthService';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 
@@ -25,7 +26,7 @@ function ProtectedRoute({ children }) {
 // Сторінка історії транзакцій
 function TransactionsPage() {
   const [transactions, setTransactions] = useState([]);
-  
+
   useEffect(() => {
     import('./services/transactionService').then(({ getMyTransactions }) => {
       getMyTransactions().then(data => {
@@ -54,7 +55,7 @@ function TransactionsPage() {
 function AppContent() {
   const [backendStatus, setBackendStatus] = useState('Перевірка...');
   const [backendOk, setBackendOk] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
     async function loadBackendStatus() {
@@ -100,6 +101,20 @@ function AppContent() {
             <MainLayout backendStatus={backendStatus} backendOk={backendOk}>
               <TransactionsPage />
             </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            {user?.role === 'ADMIN' ? (
+              <MainLayout backendStatus={backendStatus} backendOk={backendOk}>
+                <MerchantDashboard />
+              </MainLayout>
+            ) : (
+              <Navigate to="/" replace />
+            )}
           </ProtectedRoute>
         }
       />

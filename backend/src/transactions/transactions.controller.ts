@@ -21,7 +21,7 @@ import { TransactionsService, TransactionResult } from './transactions.service';
 @ApiTags('transactions')
 @Controller('transactions')
 export class TransactionsController {
-  constructor(private readonly transactionsService: TransactionsService) {}
+  constructor(private readonly transactionsService: TransactionsService) { }
 
   @Post('transfer')
   @HttpCode(HttpStatus.CREATED)
