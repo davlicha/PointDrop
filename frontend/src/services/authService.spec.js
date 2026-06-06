@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import api from './api';
+import * as authService from './authService';
 
 describe('Auth Service', () => {
   beforeEach(() => {
@@ -9,8 +10,6 @@ describe('Auth Service', () => {
 
   describe('register', () => {
     it('should successfully register a user', async () => {
-      const { register } = require('./authService');
-      
       vi.spyOn(api, 'post').mockResolvedValue({
         data: {
           id: '123',
@@ -19,7 +18,7 @@ describe('Auth Service', () => {
         },
       });
 
-      const result = await register({
+      const result = await authService.register({
         email: 'test@example.com',
         password: 'password123',
         name: 'Test User',
@@ -35,7 +34,6 @@ describe('Auth Service', () => {
 
   describe('login', () => {
     it('should successfully login and store token', async () => {
-      const { login } = require('./authService');
       
       const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test';
       vi.spyOn(api, 'post').mockResolvedValue({
@@ -44,7 +42,7 @@ describe('Auth Service', () => {
         },
       });
 
-      const result = await login({
+      const result = await authService.login({
         email: 'test@example.com',
         password: 'password123',
       });
@@ -54,12 +52,11 @@ describe('Auth Service', () => {
     });
 
     it('should throw error if login fails', async () => {
-      const { login } = require('./authService');
       
       vi.spyOn(api, 'post').mockRejectedValue(new Error('Invalid credentials'));
 
       await expect(
-        login({
+        authService.login({
           email: 'test@example.com',
           password: 'wrongpassword',
         })
@@ -69,7 +66,6 @@ describe('Auth Service', () => {
 
   describe('getQrPayload', () => {
     it('should fetch QR payload from backend', async () => {
-      const { getQrPayload } = require('./authService');
       
       const mockPayload = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
       vi.spyOn(api, 'get').mockResolvedValue({
@@ -78,7 +74,7 @@ describe('Auth Service', () => {
         },
       });
 
-      const result = await getQrPayload();
+      const result = await authService.getQrPayload();
 
       expect(result.qr_payload).toBe(mockPayload);
       expect(api.get).toHaveBeenCalledWith('/auth/qr-payload');
@@ -87,12 +83,11 @@ describe('Auth Service', () => {
 
   describe('logout', () => {
     it('should clear stored tokens on logout', () => {
-      const { logout } = require('./authService');
       
       localStorage.setItem('access_token', 'test-token');
       localStorage.setItem('user', JSON.stringify({ id: '123' }));
 
-      logout();
+      authService.logout();
 
       expect(localStorage.getItem('access_token')).toBeNull();
       expect(localStorage.getItem('user')).toBeNull();
@@ -101,19 +96,17 @@ describe('Auth Service', () => {
 
   describe('isAuthenticated', () => {
     it('should return true if token exists', () => {
-      const { isAuthenticated } = require('./authService');
       
       localStorage.setItem('access_token', 'test-token');
 
-      expect(isAuthenticated()).toBe(true);
+      expect(authService.isAuthenticated()).toBe(true);
     });
 
     it('should return false if token does not exist', () => {
-      const { isAuthenticated } = require('./authService');
       
       localStorage.removeItem('access_token');
 
-      expect(isAuthenticated()).toBe(false);
+      expect(authService.isAuthenticated()).toBe(false);
     });
   });
 });

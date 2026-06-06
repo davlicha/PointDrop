@@ -1,3 +1,4 @@
+import React from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState, useEffect } from 'react';
 import { getQrPayload } from '../services/authService';

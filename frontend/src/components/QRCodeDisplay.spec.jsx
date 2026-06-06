@@ -1,6 +1,9 @@
+import React from 'react';
+import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import QRCodeDisplay from './QRCodeDisplay';
+import * as authService from '../services/authService';
 
 vi.mock('qrcode.react', () => ({
   QRCodeSVG: ({ value }) => <div data-testid="qr-code">{value}</div>,
@@ -16,8 +19,7 @@ describe('QRCodeDisplay Component', () => {
   });
 
   it('should render loading state initially', () => {
-    const { getQrPayload } = require('../services/authService');
-    getQrPayload.mockImplementation(() => new Promise(() => {}));
+    authService.getQrPayload.mockImplementation(() => new Promise(() => {}));
 
     render(<QRCodeDisplay />);
 
@@ -32,9 +34,8 @@ describe('QRCodeDisplay Component', () => {
   });
 
   it('should fetch and render QR payload from backend', async () => {
-    const { getQrPayload } = require('../services/authService');
     const mockPayload = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
-    getQrPayload.mockResolvedValue({ qr_payload: mockPayload });
+    authService.getQrPayload.mockResolvedValue({ qr_payload: mockPayload });
 
     render(<QRCodeDisplay />);
 
@@ -44,8 +45,7 @@ describe('QRCodeDisplay Component', () => {
   });
 
   it('should display error message if QR fetch fails', async () => {
-    const { getQrPayload } = require('../services/authService');
-    getQrPayload.mockRejectedValue(new Error('API Error'));
+    authService.getQrPayload.mockRejectedValue(new Error('API Error'));
 
     render(<QRCodeDisplay />);
 
@@ -55,19 +55,18 @@ describe('QRCodeDisplay Component', () => {
   });
 
   it('should refresh QR payload every 4 minutes', async () => {
-    const { getQrPayload } = require('../services/authService');
-    getQrPayload.mockResolvedValue({ qr_payload: 'test-payload' });
+    authService.getQrPayload.mockResolvedValue({ qr_payload: 'test-payload' });
 
     vi.useFakeTimers();
     render(<QRCodeDisplay />);
 
-    expect(getQrPayload).toHaveBeenCalledTimes(1);
+    expect(authService.getQrPayload).toHaveBeenCalledTimes(1);
 
-    vi.advanceTimersByTime(4 * 60 * 1000);
-
-    await waitFor(() => {
-      expect(getQrPayload).toHaveBeenCalledTimes(2);
+    await act(async () => {
+      vi.advanceTimersByTime(4 * 60 * 1000);
     });
+
+    expect(authService.getQrPayload).toHaveBeenCalledTimes(2);
 
     vi.useRealTimers();
   });

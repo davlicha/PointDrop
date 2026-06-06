@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
 import { login as loginApi, logout as logoutApi, isAuthenticated, getQrPayload } from '../services/authService';
 import { getCurrentUserProfile } from '../services/userService';
 
