@@ -180,9 +180,6 @@ function MainScreen({ setScreen, transactions, backendError, backendHealth }) {
         </h2>
 
         {backendError && <p className="notice-error">{backendError}</p>}
-        {backendHealth && !backendError && (
-          <p className="notice-success">Бекенд підключено</p>
-        )}
 
         <div className="transfer-row" style={{ alignItems: 'center' }}>
           <div className="inputs-col">

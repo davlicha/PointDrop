@@ -25,14 +25,16 @@ function MainLayout({ children, backendStatus, backendOk }) {
         {/* Права частина панелі */}
         <div style={styles.rightBlock}>
           {/* Статус бекенду */}
-          <span
-            style={{
-              ...styles.status,
-              color: backendOk ? '#7ED957' : '#FF6B6B',
-            }}
-          >
-            {backendStatus}
-          </span>
+          {!backendOk && (
+            <span
+              style={{
+                ...styles.status,
+                color: '#FF6B6B',
+              }}
+            >
+              {backendStatus}
+            </span>
+          )}
 
           {/* Навігація */}
           <div style={styles.links}>
@@ -79,53 +81,61 @@ const styles = {
 
   // Верхня панель
   nav: {
-    width: '420px',
-    maxWidth: '90%',
+    width: '100%',
+    maxWidth: '420px',
     height: '56px',
     background: '#111111',
     borderRadius: '18px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '0 18px',
+    padding: '0 12px',
     boxSizing: 'border-box',
     marginBottom: '20px',
     border: '1px solid #2A2A2A',
+    gap: '10px',
+    overflow: 'hidden',
   },
 
   // Назва проєкту
   brand: {
     color: '#FFFFFF',
-    fontSize: '16px',
+    fontSize: '15px',
     fontWeight: '700',
+    flexShrink: 0,
   },
 
   // Права частина шапки
   rightBlock: {
     display: 'flex',
     alignItems: 'center',
-    gap: '16px',
+    gap: '12px',
+    overflowX: 'auto',
+    scrollbarWidth: 'none', // hide scrollbar for firefox
+    msOverflowStyle: 'none', // hide scrollbar for IE
   },
 
   // Текст статусу бекенду
   status: {
     fontSize: '11px',
     fontWeight: '500',
+    flexShrink: 0,
   },
 
   // Блок з посиланнями
   links: {
     display: 'flex',
     alignItems: 'center',
-    gap: '18px',
+    gap: '12px',
   },
 
   // Стиль посилань
   link: {
     color: '#FFFFFF',
     textDecoration: 'none',
-    fontSize: '13px',
+    fontSize: '12px',
     fontWeight: '500',
+    whiteSpace: 'nowrap',
   },
 
   // Кнопка виходу
