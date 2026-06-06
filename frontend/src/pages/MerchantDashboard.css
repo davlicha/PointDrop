@@ -1,13 +1,23 @@
 /* MerchantDashboard.css */
 .dashboard-container {
-  padding: 20px;
-  max-width: 600px; /* Mobile-first width like the screenshot */
+  padding: 20px 20px 0 20px;
+  max-width: 600px;
+  width: 100%;
   margin: 0 auto;
   background-color: #111111;
   color: #ffffff;
-  min-height: 100vh;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   box-sizing: border-box;
+  overflow: hidden;
+}
+
+.dashboard-header,
+.summary-cards-grid,
+.error-banner {
+  flex-shrink: 0;
 }
 
 .dashboard-header {
@@ -110,6 +120,30 @@
 }
 
 /* Section */
+.transactions-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.section-header,
+.search-container,
+.filters-container {
+  flex-shrink: 0;
+}
+
+.transaction-table-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 20px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.transaction-table-wrapper::-webkit-scrollbar {
+  display: none;
+}
 .section-header {
   display: flex;
   justify-content: space-between;
