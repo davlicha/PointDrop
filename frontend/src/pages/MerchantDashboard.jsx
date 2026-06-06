@@ -59,8 +59,14 @@ const MerchantDashboard = () => {
       }
 
       setTransactions(filtered);
-      setTotalPages(data.totalPages || 1);
-      setTotalCount(data.total || 0);
+      
+      if (filterType !== 'ALL' || searchQuery.trim() !== '') {
+        setTotalPages(Math.ceil(filtered.length / 50) || 1);
+        setTotalCount(filtered.length);
+      } else {
+        setTotalPages(data.totalPages || 1);
+        setTotalCount(data.total || 0);
+      }
     } catch (error) {
       setTransactionsError('Не вдалося завантажити історію транзакцій');
     } finally {
@@ -128,7 +134,7 @@ const MerchantDashboard = () => {
       <section>
         <div className="section-header">
           <h2 className="section-title">ТРАНЗАКЦІЇ</h2>
-          <a href="#" className="view-all" onClick={(e) => { e.preventDefault(); setFilterType('ALL'); }}>Всі →</a>
+          <a href="#" className="view-all" onClick={(e) => { e.preventDefault(); setFilterType('ALL'); setPage(1); }}>Всі →</a>
         </div>
         
         <div className="search-container">
@@ -138,15 +144,15 @@ const MerchantDashboard = () => {
             className="search-input" 
             placeholder="Пошук користувача..." 
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
           />
         </div>
 
         <div className="filters-container">
-          <button className={`filter-btn ${filterType === 'ALL' ? 'active' : ''}`} onClick={() => setFilterType('ALL')}>Всі</button>
-          <button className={`filter-btn ${filterType === 'EARN' ? 'active' : ''}`} onClick={() => setFilterType('EARN')}>Нарахування</button>
-          <button className={`filter-btn ${filterType === 'REDEEM' ? 'active' : ''}`} onClick={() => setFilterType('REDEEM')}>Списання</button>
-          <button className={`filter-btn ${filterType === 'TRANSFER' ? 'active' : ''}`} onClick={() => setFilterType('TRANSFER')}>P2P</button>
+          <button className={`filter-btn ${filterType === 'ALL' ? 'active' : ''}`} onClick={() => { setFilterType('ALL'); setPage(1); }}>Всі</button>
+          <button className={`filter-btn ${filterType === 'EARN' ? 'active' : ''}`} onClick={() => { setFilterType('EARN'); setPage(1); }}>Нарахування</button>
+          <button className={`filter-btn ${filterType === 'REDEEM' ? 'active' : ''}`} onClick={() => { setFilterType('REDEEM'); setPage(1); }}>Списання</button>
+          <button className={`filter-btn ${filterType === 'TRANSFER' ? 'active' : ''}`} onClick={() => { setFilterType('TRANSFER'); setPage(1); }}>P2P</button>
         </div>
 
         {transactionsError && (
