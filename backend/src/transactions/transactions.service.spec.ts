@@ -143,7 +143,7 @@ describe('TransactionsService', () => {
     it('should calculate points, update balance and create earn transaction', async () => {
       jest.spyOn(authService, 'verifyQrPayload').mockReturnValue({ user_id: userId, timestamp: Date.now() });
       prismaMock.merchant.findUnique.mockResolvedValue({ id: dto.merchantId, cashbackRate: 10.0 }); // 10% of 1000 = 100
-      
+
       const fakeTransaction = { id: 'tx-earn', type: TransactionType.EARN, amount: 100 };
       prismaMock.balance.upsert.mockResolvedValue({ pointsAmount: 150 });
       prismaMock.transaction.create.mockResolvedValue(fakeTransaction);
@@ -188,7 +188,7 @@ describe('TransactionsService', () => {
 
     it('should decrement balance and create redeem transaction', async () => {
       prismaMock.balance.findUnique.mockResolvedValue({ pointsAmount: 100 });
-      
+
       const fakeTransaction = { id: 'tx-redeem', type: TransactionType.REDEEM, amount: 50 };
       prismaMock.balance.update.mockResolvedValue({ pointsAmount: 50 });
       prismaMock.transaction.create.mockResolvedValue(fakeTransaction);

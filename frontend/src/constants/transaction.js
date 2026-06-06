@@ -1,0 +1,5 @@
+export const TRANSACTION_TYPES = {
+  EARN: 'EARN',
+  REDEEM: 'REDEEM',
+  TRANSFER: 'TRANSFER',
+};
