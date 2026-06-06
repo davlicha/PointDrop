@@ -136,6 +136,22 @@ input, textarea {
     border: 8px solid #27272a; /* "Device" bezel */
     outline: 1px solid #3f3f46;
     margin: 40px auto;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  
+  /* Style scrollbar for WebKit browsers to match the dark theme */
+  #root::-webkit-scrollbar {
+    width: 6px;
+  }
+  #root::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  #root::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+  }
+  #root::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
   }
 }

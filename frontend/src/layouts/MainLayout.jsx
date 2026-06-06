@@ -70,7 +70,8 @@ function MainLayout({ children, backendStatus, backendOk }) {
 const styles = {
   // Загальна обгортка сторінки
   wrapper: {
-    minHeight: '100vh',
+    height: '100%',
+    width: '100%',
     background: '#1E1E1E',
     display: 'flex',
     flexDirection: 'column',
@@ -152,11 +153,13 @@ const styles = {
   // Контент під верхньою панеллю
   main: {
     width: '100%',
+    flex: 1,
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'flex-start',
     padding: 0,
     boxSizing: 'border-box',
+    overflowY: 'auto',
   },
 };
 

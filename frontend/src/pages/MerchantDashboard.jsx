@@ -131,7 +131,7 @@ const MerchantDashboard = () => {
         </div>
       </div>
 
-      <section>
+      <section className="transactions-section">
         <div className="section-header">
           <h2 className="section-title">ТРАНЗАКЦІЇ</h2>
           <a href="#" className="view-all" onClick={(e) => { e.preventDefault(); setFilterType('ALL'); setPage(1); }}>Всі →</a>
@@ -162,14 +162,16 @@ const MerchantDashboard = () => {
           </div>
         )}
 
-        <TransactionTable
-          transactions={transactions}
-          isLoading={isLoadingTransactions}
-          page={page}
-          totalPages={totalPages}
-          totalCount={totalCount}
-          onPageChange={setPage}
-        />
+        <div className="transaction-table-wrapper">
+          <TransactionTable
+            transactions={transactions}
+            isLoading={isLoadingTransactions}
+            page={page}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            onPageChange={setPage}
+          />
+        </div>
       </section>
     </div>
   );
