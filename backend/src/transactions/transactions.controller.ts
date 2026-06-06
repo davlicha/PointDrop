@@ -7,6 +7,9 @@ import {
   ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiInternalServerErrorResponse,
+  ApiOkResponse,
 } from '@nestjs/swagger';
 import { Transaction } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -19,6 +22,7 @@ import {
 import { TransactionsService, TransactionResult } from './transactions.service';
 
 @ApiTags('transactions')
+@ApiInternalServerErrorResponse({ description: 'Внутрішня помилка сервера' })
 @Controller('transactions')
 export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) { }
@@ -38,6 +42,8 @@ export class TransactionsController {
   @ApiBadRequestResponse({
     description: 'Невалідне тіло запиту (наприклад, amount <= 0)',
   })
+  @ApiUnauthorizedResponse({ description: 'Токен авторизації невалідний або відсутній' })
+  @ApiForbiddenResponse({ description: 'Доступ заборонено' })
   async transfer(@Body() dto: TransferPointsDto): Promise<Transaction> {
     return this.transactionsService.transfer(dto);
   }
@@ -84,6 +90,7 @@ export class TransactionsController {
   @ApiUnauthorizedResponse({
     description: 'Токен авторизації невалідний або відсутній',
   })
+  @ApiForbiddenResponse({ description: 'Доступ заборонено' })
   async redeem(@Body() dto: RedeemPointsDto): Promise<TransactionResponseDto> {
     const result = await this.transactionsService.redeem(dto);
     return this.mapToResponse(result);
@@ -96,6 +103,9 @@ export class TransactionsController {
     summary: 'Отримати історію транзакцій поточного користувача',
     description: 'Повертає список транзакцій користувача.',
   })
+  @ApiOkResponse({ description: 'Історія транзакцій успішно отримана' })
+  @ApiUnauthorizedResponse({ description: 'Токен авторизації невалідний або відсутній' })
+  @ApiForbiddenResponse({ description: 'Доступ заборонено' })
   async getMyTransactions(@Request() req: any) {
     return this.transactionsService.getUserTransactions(req.user.id);
   }

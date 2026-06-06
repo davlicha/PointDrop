@@ -7,6 +7,9 @@ import {
   ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
+  ApiBadRequestResponse,
+  ApiForbiddenResponse,
+  ApiInternalServerErrorResponse,
 } from '@nestjs/swagger';
 import { CurrentUser } from '../common/decorators';
 import { AuthService } from './auth.service';
@@ -20,6 +23,7 @@ import {
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @ApiTags('auth')
+@ApiInternalServerErrorResponse({ description: 'Внутрішня помилка сервера' })
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -33,6 +37,7 @@ export class AuthController {
     description: 'Користувача успішно створено',
     type: RegisterResponseDto,
   })
+  @ApiBadRequestResponse({ description: 'Невалідні дані запиту' })
   @ApiConflictResponse({
     description: 'Користувач з таким email або телефоном вже існує',
   })
@@ -55,6 +60,7 @@ export class AuthController {
     description: 'Успішна авторизація',
     type: AuthResponseDto,
   })
+  @ApiBadRequestResponse({ description: 'Невалідні дані запиту' })
   @ApiUnauthorizedResponse({
     description: 'Невірний email або пароль',
   })
@@ -75,6 +81,7 @@ export class AuthController {
   @ApiUnauthorizedResponse({
     description: 'Токен авторизації невалідний або відсутній',
   })
+  @ApiForbiddenResponse({ description: 'Доступ заборонено' })
   getProfile(@CurrentUser('userId') userId: string) {
     return this.authService.getUserProfile(userId);
   }
@@ -93,6 +100,7 @@ export class AuthController {
   @ApiUnauthorizedResponse({
     description: 'Токен авторизації невалідний або відсутній',
   })
+  @ApiForbiddenResponse({ description: 'Доступ заборонено' })
   getQrPayload(@CurrentUser('userId') userId: string): QrPayloadResponseDto {
     return this.authService.generateQrPayload(userId);
   }

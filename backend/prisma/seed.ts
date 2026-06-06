@@ -46,11 +46,13 @@ async function main() {
   }
   console.log(`Заклад готовий: ${merchant.name}`);
 
-  // 3. 3 Тестових користувача
+  // 3. 5 Тестових користувачів
   const usersData = [
     { phone: '+380501110001', email: 'user1@test.com', name: 'Олексій (Тест 1)', passwordHash: passwordHash, role: Role.CUSTOMER },
     { phone: '+380501110002', email: 'user2@test.com', name: 'Марія (Тест 2)', passwordHash: passwordHash, role: Role.CUSTOMER },
     { phone: '+380501110003', email: 'user3@test.com', name: 'Іван (Тест 3)', passwordHash: passwordHash, role: Role.CUSTOMER },
+    { phone: '+380501110004', email: 'user4@test.com', name: 'Анна (Тест 4)', passwordHash: passwordHash, role: Role.CUSTOMER },
+    { phone: '+380501110005', email: 'user5@test.com', name: 'Дмитро (Тест 5)', passwordHash: passwordHash, role: Role.CUSTOMER },
   ];
 
   const createdUsers = [];
@@ -67,7 +69,7 @@ async function main() {
     console.log(`Створено користувача: ${user.name} (Email: ${user.email}, Password: password123)`);
   }
 
-  // 4. Транзакції різних типів (EARN, REDEEM, TRANSFER)
+  // 4. Транзакції різних типів (EARN, REDEEM, TRANSFER) >= 20 шт.
   console.log('Створюємо транзакції...');
 
   const transactions = [
@@ -77,12 +79,28 @@ async function main() {
     { amount: 32, senderId: null, receiverId: createdUsers[1].id, merchantId: merchant.id, type: TransactionType.EARN },
     { amount: 10, senderId: null, receiverId: createdUsers[2].id, merchantId: merchant.id, type: TransactionType.EARN },
     { amount: 1,  senderId: null, receiverId: createdUsers[2].id, merchantId: merchant.id, type: TransactionType.EARN },
+    { amount: 20, senderId: null, receiverId: createdUsers[3].id, merchantId: merchant.id, type: TransactionType.EARN },
+    { amount: 50, senderId: null, receiverId: createdUsers[4].id, merchantId: merchant.id, type: TransactionType.EARN },
+    { amount: 8,  senderId: null, receiverId: createdUsers[1].id, merchantId: merchant.id, type: TransactionType.EARN },
+    { amount: 12, senderId: null, receiverId: createdUsers[3].id, merchantId: merchant.id, type: TransactionType.EARN },
+    { amount: 25, senderId: null, receiverId: createdUsers[0].id, merchantId: merchant.id, type: TransactionType.EARN },
+    { amount: 5,  senderId: null, receiverId: createdUsers[4].id, merchantId: merchant.id, type: TransactionType.EARN },
+    { amount: 7,  senderId: null, receiverId: createdUsers[2].id, merchantId: merchant.id, type: TransactionType.EARN },
+    
     // REDEEM
     { amount: 5,  senderId: createdUsers[0].id, receiverId: mainAdmin.id, merchantId: merchant.id, type: TransactionType.REDEEM },
     { amount: 10, senderId: createdUsers[1].id, receiverId: mainAdmin.id, merchantId: merchant.id, type: TransactionType.REDEEM },
+    { amount: 15, senderId: createdUsers[3].id, receiverId: mainAdmin.id, merchantId: merchant.id, type: TransactionType.REDEEM },
+    { amount: 2,  senderId: createdUsers[2].id, receiverId: mainAdmin.id, merchantId: merchant.id, type: TransactionType.REDEEM },
+    { amount: 20, senderId: createdUsers[4].id, receiverId: mainAdmin.id, merchantId: merchant.id, type: TransactionType.REDEEM },
+    { amount: 8,  senderId: createdUsers[0].id, receiverId: mainAdmin.id, merchantId: merchant.id, type: TransactionType.REDEEM },
+    { amount: 4,  senderId: createdUsers[1].id, receiverId: mainAdmin.id, merchantId: merchant.id, type: TransactionType.REDEEM },
+    
     // TRANSFER
     { amount: 2,  senderId: createdUsers[0].id, receiverId: createdUsers[1].id, merchantId: merchant.id, type: TransactionType.TRANSFER },
     { amount: 3,  senderId: createdUsers[1].id, receiverId: createdUsers[2].id, merchantId: merchant.id, type: TransactionType.TRANSFER },
+    { amount: 5,  senderId: createdUsers[3].id, receiverId: createdUsers[4].id, merchantId: merchant.id, type: TransactionType.TRANSFER },
+    { amount: 1,  senderId: createdUsers[4].id, receiverId: createdUsers[0].id, merchantId: merchant.id, type: TransactionType.TRANSFER },
   ];
 
   for (const t of transactions) {
