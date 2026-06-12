@@ -24,7 +24,6 @@ export function AuthProvider({ children }) {
       localStorage.setItem('user', JSON.stringify(userProfile));
       return userProfile;
     } catch (error) {
-      console.error('Failed to refresh user profile:', error);
       throw error;
     }
   };

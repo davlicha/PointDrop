@@ -48,7 +48,10 @@ async function bootstrap(): Promise<void> {
     .setVersion('1.0.0')
     .addBearerAuth()
     .addTag('health', 'Liveness + DB connectivity')
+    .addTag('auth', 'Авторизація та реєстрація')
+    .addTag('users', 'Користувачі')
     .addTag('transactions', 'EARN / REDEEM / TRANSFER операції')
+    .addTag('analytics', 'Аналітика та звіти')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);

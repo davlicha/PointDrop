@@ -32,6 +32,7 @@ model User {
   receivedTransactions Transaction[] @relation("ReceivedTransactions")
 
   @@index([phone])
+  @@index([createdAt])
   @@map("users")
 }
 
@@ -59,6 +60,8 @@ model Balance {
   merchant Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
 
   @@unique([userId, merchantId])
+  @@index([userId])
+  @@index([merchantId])
   @@index([qrPayload])
   @@map("balances")
 }
@@ -77,7 +80,9 @@ model Transaction {
   receiver User     @relation("ReceivedTransactions", fields: [receiverId], references: [id], onDelete: Restrict)
 
   @@index([merchantId, timestamp])
+  @@index([merchantId])
   @@index([receiverId])
   @@index([senderId])
+  @@index([timestamp])
   @@map("transactions")
 }

@@ -24,7 +24,6 @@ function QRCodeDisplay({ value, size = 100 }) {
         setError(null);
       } catch (err) {
         setError('Не вдалося згенерувати QR-код');
-        console.error('QR payload error:', err);
       } finally {
         setLoading(false);
       }

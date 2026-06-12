@@ -1,9 +1,11 @@
 import { BadRequestException, Controller, Get, Post, Request, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiInternalServerErrorResponse, ApiOkResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UsersService } from './users.service';
+import { UserSearchResponseDto, MakeMerchantResponseDto } from './dto';
 
 @ApiTags('users')
+@ApiInternalServerErrorResponse({ description: 'Внутрішня помилка сервера' })
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -17,10 +19,14 @@ export class UsersController {
   })
   @ApiQuery({ name: 'phone', required: true, description: 'Номер телефону для пошуку' })
   @ApiQuery({ name: 'merchantId', required: true, description: 'ID мерчанта' })
+  @ApiOkResponse({ description: 'Результати пошуку користувачів', type: [UserSearchResponseDto] })
+  @ApiBadRequestResponse({ description: 'Невалідні параметри запиту' })
+  @ApiUnauthorizedResponse({ description: 'Токен авторизації невалідний або відсутній' })
+  @ApiForbiddenResponse({ description: 'Доступ заборонено' })
   async searchUsers(
     @Query('phone') phone: string,
     @Query('merchantId') merchantId: string,
-  ) {
+  ): Promise<UserSearchResponseDto[]> {
     if (!phone || !merchantId) {
       throw new BadRequestException('Параметри phone та merchantId є обов\'язковими');
     }
@@ -41,7 +47,10 @@ export class UsersController {
     summary: 'Тестовий ендпоінт: Зробити мене мерчантом',
     description: 'Надає поточному користувачу роль ADMIN і створює для нього тестовий заклад.',
   })
-  async makeMeMerchant(@Request() req: any) {
+  @ApiOkResponse({ description: 'Користувач успішно отримав роль мерчанта', type: MakeMerchantResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Токен авторизації невалідний або відсутній' })
+  @ApiForbiddenResponse({ description: 'Доступ заборонено' })
+  async makeMeMerchant(@Request() req: any): Promise<MakeMerchantResponseDto> {
     return this.usersService.makeUserMerchant(req.user.id);
   }
 }

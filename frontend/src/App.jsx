@@ -1,11 +1,13 @@
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
 import MainLayout from './layouts/MainLayout';
 import MainApp from './pages/MainApp';
 import LoginPage from './pages/LoginPage';
 import TransactionTable from './components/TransactionTable';
 import MerchantDashboard from './pages/MerchantDashboard';
+import ErrorBoundary from './components/ErrorBoundary';
 import { checkHealth } from './services/healthService';
+import { getMyTransactions } from './services/transactionService';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 
 // Захищений роут
@@ -28,8 +30,8 @@ function TransactionsPage() {
   const [transactions, setTransactions] = useState([]);
 
   useEffect(() => {
-    import('./services/transactionService').then(({ getMyTransactions }) => {
-      getMyTransactions().then(data => {
+    getMyTransactions()
+      .then((data) => {
         const mapped = data.map(t => ({
           id: t.id,
           amount: t.type === 'EARN' || t.receiverId === t.id ? '+' + t.amount : '-' + t.amount,
@@ -39,8 +41,8 @@ function TransactionsPage() {
           color: t.type === 'EARN' || t.receiverId === t.id ? '#10b981' : '#ef4444',
         }));
         setTransactions(mapped);
-      }).catch(console.error);
-    });
+      })
+      .catch(() => {});
   }, []);
 
   return (
@@ -127,10 +129,13 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppContent />
+        <ErrorBoundary>
+          <AppContent />
+        </ErrorBoundary>
       </AuthProvider>
     </BrowserRouter>
   );
 }
 
 export default App;
+

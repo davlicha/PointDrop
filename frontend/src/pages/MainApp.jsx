@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TransactionTable from '../components/TransactionTable.jsx';
 import QRCodeDisplay from '../components/QRCodeDisplay';
+import QRScanner from '../components/QRScanner';
 import { checkHealth } from '../services/healthService';
-import { transferPoints } from '../services/transactionService';
+import { transferPoints, getMyTransactions } from '../services/transactionService';
 import { useAuth } from '../hooks/useAuth';
 import { getQrPayload } from '../services/authService';
 import UserSearch from '../components/UserSearch';
@@ -40,22 +41,20 @@ function App() {
   const [loadingTransactions, setLoadingTransactions] = useState(true);
 
   useEffect(() => {
-    import('../services/transactionService').then(({ getMyTransactions }) => {
-      getMyTransactions()
-        .then((data) => {
-          const mapped = data.map(t => ({
-            id: t.id,
-            amount: t.type === 'EARN' || t.receiverId === t.id ? '+' + t.amount : '-' + t.amount,
-            name: t.type,
-            time: new Date(t.timestamp).toLocaleString(),
-            status: t.type,
-            color: t.type === 'EARN' || t.receiverId === t.id ? '#10b981' : '#ef4444',
-          }));
-          setTransactions(mapped);
-        })
-        .catch(console.error)
-        .finally(() => setLoadingTransactions(false));
-    });
+    getMyTransactions()
+      .then((data) => {
+        const mapped = data.map(t => ({
+          id: t.id,
+          amount: t.type === 'EARN' || t.receiverId === t.id ? '+' + t.amount : '-' + t.amount,
+          name: t.type,
+          time: new Date(t.timestamp).toLocaleString(),
+          status: t.type,
+          color: t.type === 'EARN' || t.receiverId === t.id ? '#10b981' : '#ef4444',
+        }));
+        setTransactions(mapped);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingTransactions(false));
   }, []);
 
   // Відкриває потрібний екран
@@ -181,9 +180,6 @@ function MainScreen({ setScreen, transactions, backendError, backendHealth }) {
         </h2>
 
         {backendError && <p className="notice-error">{backendError}</p>}
-        {backendHealth && !backendError && (
-          <p className="notice-success">Бекенд підключено</p>
-        )}
 
         <div className="transfer-row" style={{ alignItems: 'center' }}>
           <div className="inputs-col">
@@ -258,7 +254,6 @@ function QRScreen({ setScreen }) {
         const data = await getQrPayload();
         setQrData(data);
       } catch (err) {
-        console.error('Failed to fetch QR data:', err);
         setError('Не вдалося завантажити QR-код');
       } finally {
         setLoading(false);
@@ -317,8 +312,10 @@ function QRScreen({ setScreen }) {
   );
 }
 
-// Екран сканера (Mock)
+// Екран сканера (Справжній сканер)
 function ScanScreen({ setScreen }) {
+  const [scannedResult, setScannedResult] = useState(null);
+
   return (
     <section className="page-section animate-fade-in">
       <Header
@@ -328,21 +325,46 @@ function ScanScreen({ setScreen }) {
         setScreen={setScreen}
       />
 
-      <div className="center-block">
-        <div style={{ width: '240px', height: '240px', border: '2px dashed var(--primary)', borderRadius: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '32px' }}>
-          <p style={{ color: 'var(--text-secondary)' }}>Камера...</p>
-        </div>
-
-        <p style={{ marginBottom: '32px', color: 'var(--text-secondary)' }}>Наведіть камеру на QR-код користувача</p>
-
-        <div style={{ display: 'flex', gap: '16px', width: '100%' }}>
-          <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => setScreen('success')}>
-            Демо: Успіх
-          </button>
-          <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => setScreen('error')}>
-            Демо: Помилка
-          </button>
-        </div>
+      <div className="center-block" style={{ width: '100%' }}>
+        {!scannedResult ? (
+          <>
+            <p style={{ marginBottom: '24px', color: 'var(--text-secondary)', textAlign: 'center' }}>
+              Наведіть камеру на QR-код
+            </p>
+            <QRScanner 
+              onScanSuccess={(decodedText) => {
+                setScannedResult(decodedText);
+              }}
+            />
+          </>
+        ) : (
+          <div className="glass-card" style={{ textAlign: 'center', width: '100%' }}>
+            <div className="status-icon-lg status-success" style={{ margin: '0 auto 16px' }}>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <h3 style={{ color: 'var(--primary)', marginBottom: '16px' }}>QR код розпізнано!</h3>
+            
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', wordBreak: 'break-all', background: 'var(--bg-color)', padding: '12px', borderRadius: '8px', marginBottom: '24px' }}>
+              {scannedResult}
+            </p>
+            
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button className="btn btn-secondary" style={{ flex: 1, padding: '10px' }} onClick={() => setScannedResult(null)}>
+                Ще раз
+              </button>
+              <button 
+                className="btn btn-primary" 
+                style={{ flex: 1, padding: '10px' }} 
+                onClick={() => {
+                  navigator.clipboard.writeText(scannedResult);
+                  setScreen('main');
+                }}
+              >
+                Копіювати
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -476,14 +498,16 @@ function IntroScreen({ setScreen }) {
 // Екран меню
 function MenuScreen({ setScreen, transactions }) {
   const { user, refreshUserProfile } = useAuth();
+  const [merchantStatus, setMerchantStatus] = useState('');
   
   const handleMakeMerchant = async () => {
+    setMerchantStatus('');
     try {
       await makeMeMerchant();
       await refreshUserProfile();
-      alert('Успіх! Ви тепер мерчант. Перейдіть в "Режим касира"');
+      setMerchantStatus('Успіх! Ви тепер мерчант. Перейдіть в "Режим касира"');
     } catch (err) {
-      alert('Помилка: ' + (err.response?.data?.message || err.message));
+      setMerchantStatus('Помилка: ' + (err.response?.data?.message || err.message));
     }
   };
 
@@ -527,6 +551,12 @@ function MenuScreen({ setScreen, transactions }) {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
               Режим касира
             </button>
+          )}
+
+          {merchantStatus && (
+            <div className={merchantStatus.startsWith('Успіх') ? 'notice-success' : 'notice-error'} style={{ margin: '8px 0', padding: '10px', borderRadius: '10px', fontSize: '13px' }}>
+              {merchantStatus}
+            </div>
           )}
 
           <button className="menu-item" onClick={() => setScreen('profile')}>
