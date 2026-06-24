@@ -62,13 +62,13 @@ describe('UsersController', () => {
     });
   });
 
-  describe('makeMeMerchant', () => {
+  describe('makeUserMerchant', () => {
     it('should call usersService.makeUserMerchant with user ID from request', async () => {
-      const req = { user: { id: 'user-123' } };
+      const req = { user: { userId: 'user-123' } };
       const mockResponse = { success: true, message: 'Тепер ви мерчант!' };
       jest.spyOn(service, 'makeUserMerchant').mockResolvedValue(mockResponse);
 
-      const result = await controller.makeMeMerchant(req);
+      const result = await controller.makeUserMerchant(req);
 
       expect(service.makeUserMerchant).toHaveBeenCalledWith('user-123');
       expect(result).toEqual(mockResponse);

@@ -68,7 +68,7 @@ describe('TransactionsController', () => {
           merchantId: 'merchant-123',
           receiverId: 'user-123',
           senderId: null,
-          createdAt: mockDate,
+          timestamp: mockDate,
         },
         currentBalance: 150,
       };
@@ -84,7 +84,7 @@ describe('TransactionsController', () => {
         amount: 100,
         merchantId: 'merchant-123',
         receiverId: 'user-123',
-        createdAt: mockDate,
+        timestamp: mockDate,
         currentBalance: 150,
       });
     });
@@ -107,7 +107,7 @@ describe('TransactionsController', () => {
           merchantId: 'merchant-123',
           receiverId: 'user-123',
           senderId: null,
-          createdAt: mockDate,
+          timestamp: mockDate,
         },
         currentBalance: 100,
       };
@@ -123,7 +123,7 @@ describe('TransactionsController', () => {
         amount: 50,
         merchantId: 'merchant-123',
         receiverId: 'user-123',
-        createdAt: mockDate,
+        timestamp: mockDate,
         currentBalance: 100,
       });
     });
@@ -131,7 +131,7 @@ describe('TransactionsController', () => {
 
   describe('getMyTransactions', () => {
     it('should call service.getUserTransactions with userId from request', async () => {
-      const req = { user: { id: 'user-123' } };
+      const req = { user: { userId: 'user-123' } };
       const mockTransactions: any = [{ id: 'tx-1' }];
       
       jest.spyOn(service, 'getUserTransactions').mockResolvedValue(mockTransactions);

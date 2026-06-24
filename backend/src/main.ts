@@ -18,14 +18,10 @@ async function bootstrap(): Promise<void> {
 
   const config = app.get(ConfigService);
   const port = config.get<number>('port', 3000);
-  const corsOrigin = config.get<string>(
-    'corsOrigin',
-    'http://localhost:5173',
-  );
   const swaggerPath = config.get<string>('swaggerPath', 'api/docs');
   const nodeEnv = config.get<string>('nodeEnv', 'development');
 
-  app.enableCors({ origin: corsOrigin, credentials: true });
+  app.enableCors({ origin: true, credentials: true });
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -65,7 +61,7 @@ async function bootstrap(): Promise<void> {
     logger.log(`OpenAPI spec exported to ${specPath}`);
   }
 
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
 
   logger.log(`PointDrop API listening on http://localhost:${port}`);
   logger.log(`Swagger UI available at http://localhost:${port}/${swaggerPath}`);
