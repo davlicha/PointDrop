@@ -1,6 +1,14 @@
 import axios from 'axios';
 
-const API_URL = (import.meta && import.meta.env && import.meta.env.VITE_API_URL) || 'http://localhost:3000';
+const envApiUrl = (import.meta && import.meta.env && import.meta.env.VITE_API_URL) || 'http://localhost:3000';
+
+let API_URL = envApiUrl;
+
+// Якщо ми на локальній мережі/localhost, використовуємо відносний шлях, 
+// щоб Vite proxy перенаправляв запит на бекенд, уникаючи помилки Mixed Content (https -> http)
+if (API_URL.includes('localhost')) {
+  API_URL = '';
+}
 
 const api = axios.create({
   baseURL: `${API_URL}/api/v1`,

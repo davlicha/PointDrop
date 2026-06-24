@@ -47,6 +47,22 @@ services:
       - pointdrop_network
     restart: unless-stopped
 
+  prisma-studio:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pointdrop_prisma_studio
+    env_file:
+      - .env
+    command: sh -c "npx prisma studio --url=$$DATABASE_URL --port 5555 --browser none"
+    ports:
+      - "5555:5555"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pointdrop_network
+
   frontend:
     build:
       context: ./frontend
