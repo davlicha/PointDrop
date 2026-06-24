@@ -13,6 +13,8 @@ export function AuthProvider({ children }) {
     const savedUser = localStorage.getItem('user');
     if (savedUser && isAuthenticated()) {
       setUser(JSON.parse(savedUser));
+      // Завжди оновлюємо дані у фоні при завантаженні додатка
+      refreshUserProfile().catch(console.error);
     }
     setLoading(false);
   }, []);

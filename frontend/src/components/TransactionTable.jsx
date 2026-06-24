@@ -1,21 +1,24 @@
 import React, { useMemo, useState } from 'react';
 
-function TransactionTable({ transactions }) {
+function TransactionTable({ transactions, hidePagination = false, limit = 10 }) {
   // Поточна сторінка
   const [currentPage, setCurrentPage] = useState(1);
 
   // К-сть елементів на сторінці
-  const itemsPerPage = 3;
+  const itemsPerPage = limit;
 
   // Загальна к-сть сторінок
   const totalPages = Math.ceil(transactions.length / itemsPerPage);
 
   // Дані для поточної сторінки
   const currentTransactions = useMemo(() => {
+    if (hidePagination) {
+      return transactions.slice(0, limit);
+    }
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return transactions.slice(startIndex, endIndex);
-  }, [transactions, currentPage]);
+  }, [transactions, currentPage, hidePagination, limit]);
 
   function handlePrevPage() {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
@@ -66,9 +69,9 @@ function TransactionTable({ transactions }) {
                 <div className="tx-left">
                   <div className={`tx-icon ${isPositive ? 'bg-primary-light' : 'bg-danger-light'}`}>
                     {isPositive ? (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
                     ) : (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
                     )}
                   </div>
                   <div>
@@ -87,7 +90,7 @@ function TransactionTable({ transactions }) {
         })}
       </div>
 
-      {totalPages > 1 && (
+      {(!hidePagination && totalPages > 1) && (
         <div className="pagination">
           <button
             className={`btn btn-secondary ${currentPage === 1 ? 'btn-disabled' : ''}`}

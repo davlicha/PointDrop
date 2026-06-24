@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { earnPoints } from '../services/transactionService';
+import QRScanner from '../components/QRScanner';
 
 export default function CashierPage({ setScreen }) {
   const { user } = useAuth();
@@ -8,8 +9,9 @@ export default function CashierPage({ setScreen }) {
   const [amountSpent, setAmountSpent] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
 
-  const merchant = user?.managedMerchants?.[0]; // Get the first managed merchant
+  const merchant = user?.managedMerchants?.[0] || user?.employer; // Get managed merchant for ADMIN, or employer for CASHIER
 
   const handleEarn = async (e) => {
     e.preventDefault();
@@ -59,15 +61,49 @@ export default function CashierPage({ setScreen }) {
             <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px', display: 'block' }}>
               QR Payload Клієнта
             </label>
-            <input
-              type="text"
-              className="input-base"
-              placeholder="Вставте QR код сюди"
-              value={qrPayload}
-              onChange={(e) => setQrPayload(e.target.value)}
-              required
-            />
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                type="text"
+                className="input-base"
+                placeholder="Вставте QR код сюди"
+                value={qrPayload}
+                onChange={(e) => setQrPayload(e.target.value)}
+                required
+                style={{ marginBottom: '0' }}
+              />
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ padding: '0 16px', height: '48px', flexShrink: 0 }}
+                onClick={() => setIsScanning(!isScanning)}
+                title="Сканувати QR"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              </button>
+            </div>
           </div>
+
+          {isScanning && (
+            <div style={{ background: 'var(--bg-color)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', marginTop: '8px' }}>
+              <p style={{ textAlign: 'center', marginBottom: '12px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+                Наведіть камеру на QR-код клієнта
+              </p>
+              <QRScanner
+                onScanSuccess={(decodedText) => {
+                  setQrPayload(decodedText);
+                  setIsScanning(false);
+                }}
+              />
+              <button
+                type="button"
+                className="btn btn-ghost btn-full"
+                style={{ marginTop: '12px' }}
+                onClick={() => setIsScanning(false)}
+              >
+                Закрити сканер
+              </button>
+            </div>
+          )}
 
           <div>
             <label style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px', display: 'block' }}>
