@@ -5,20 +5,36 @@ const qrcodeRegionId = "html5qr-code-full-region";
 
 function QRScanner({ onScanSuccess, onScanFailure }) {
   const [hasError, setHasError] = useState(false);
+  const containerRef = useRef(null);
   const scannerRef = useRef(null);
 
   useEffect(() => {
-    // Конфігурація сканера
+    if (!containerRef.current) return;
+
+    // Створюємо унікальний ID для кожного маунта, щоб уникнути конфліктів StrictMode
+    const uniqueId = `qr-${Math.random().toString(36).substring(2, 9)}`;
+    
+    // Створюємо div динамічно, щоб React не намагався ним керувати
+    const scannerDiv = document.createElement('div');
+    scannerDiv.id = uniqueId;
+    scannerDiv.style.borderRadius = '16px';
+    scannerDiv.style.overflow = 'hidden';
+    
+    containerRef.current.appendChild(scannerDiv);
+
     const config = {
       fps: 10,
-      qrbox: { width: 250, height: 250 },
-      aspectRatio: 1.0,
       rememberLastUsedCamera: true,
-      supportedScanTypes: [0] // 0 = QR_CODE
+      useBarCodeDetectorIfSupported: true,
+      videoConstraints: {
+        facingMode: "environment",
+        width: { ideal: 1920, min: 1280 },
+        height: { ideal: 1080, min: 720 }
+      }
     };
 
     try {
-      const html5QrcodeScanner = new Html5QrcodeScanner(qrcodeRegionId, config, false);
+      const html5QrcodeScanner = new Html5QrcodeScanner(uniqueId, config, false);
       scannerRef.current = html5QrcodeScanner;
 
       html5QrcodeScanner.render(
@@ -38,10 +54,14 @@ function QRScanner({ onScanSuccess, onScanFailure }) {
       setHasError(true);
     }
 
-    // Очищення при анмаунті
     return () => {
       if (scannerRef.current) {
-        scannerRef.current.clear().catch(error => {
+        scannerRef.current.clear().then(() => {
+          // Після очищення сканера, видаляємо наш динамічний div
+          if (containerRef.current && scannerDiv.parentNode === containerRef.current) {
+            containerRef.current.removeChild(scannerDiv);
+          }
+        }).catch(error => {
           console.error("Failed to clear html5QrcodeScanner. ", error);
         });
       }
@@ -58,17 +78,17 @@ function QRScanner({ onScanSuccess, onScanFailure }) {
 
   return (
     <div style={{ width: '100%', maxWidth: '400px', margin: '0 auto' }}>
-      {/* Container where the scanner will be rendered */}
-      <div id={qrcodeRegionId} style={{ borderRadius: '16px', overflow: 'hidden' }} />
+      {/* Container where the dynamic scanner div will be appended */}
+      <div ref={containerRef} className="qr-scanner-wrapper" />
       <style>{`
-        #${qrcodeRegionId} {
+        .qr-scanner-wrapper > div {
           border: 2px dashed var(--primary) !important;
           border-radius: 16px;
         }
-        #${qrcodeRegionId} img[alt="Info icon"] {
+        .qr-scanner-wrapper img[alt="Info icon"] {
           display: none;
         }
-        #${qrcodeRegionId} button {
+        .qr-scanner-wrapper button {
           background-color: var(--primary);
           color: white;
           border: none;
@@ -79,7 +99,7 @@ function QRScanner({ onScanSuccess, onScanFailure }) {
           margin-top: 10px;
           margin-bottom: 10px;
         }
-        #${qrcodeRegionId} a {
+        .qr-scanner-wrapper a {
           color: var(--primary);
         }
       `}</style>

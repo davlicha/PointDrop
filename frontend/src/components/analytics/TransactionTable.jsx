@@ -48,7 +48,7 @@ const TransactionTable = ({
   if (isLoading) {
     return (
       <div className="transaction-list">
-        {[...Array(5)].map((_, index) => (
+        {[...Array(4)].map((_, index) => (
           <div key={index} className="transaction-card">
             <div className="tx-left">
               <div className="skeleton skeleton-avatar"></div>
@@ -96,7 +96,7 @@ const TransactionTable = ({
     );
   }
 
-  const startIndex = (page - 1) * 50 + 1;
+  const startIndex = (page - 1) * 4 + 1;
   const endIndex = Math.min(startIndex + transactions.length - 1, totalCount);
 
   return (

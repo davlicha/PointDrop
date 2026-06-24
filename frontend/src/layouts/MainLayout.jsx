@@ -1,65 +1,8 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-
 // Базовий layout додатку
 function MainLayout({ children, backendStatus, backendOk }) {
-  // Навігація після виходу
-  const navigate = useNavigate();
-
-  // Дані авторизації
-  const { logout, isAuthenticated, user } = useAuth();
-
-  // Вихід з акаунта
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   return (
     <div style={styles.wrapper}>
-      {/* Верхня панель */}
-      <nav style={styles.nav}>
-        {/* Назва проєкту */}
-        <div style={styles.brand}>PointDrop</div>
 
-        {/* Права частина панелі */}
-        <div style={styles.rightBlock}>
-          {/* Статус бекенду */}
-          {!backendOk && (
-            <span
-              style={{
-                ...styles.status,
-                color: '#FF6B6B',
-              }}
-            >
-              {backendStatus}
-            </span>
-          )}
-
-          {/* Навігація */}
-          <div style={styles.links}>
-            <Link to="/" style={styles.link}>
-              Головна
-            </Link>
-
-            <Link to="/transactions" style={styles.link}>
-              Транзакції
-            </Link>
-
-            {user?.role === 'ADMIN' && (
-              <Link to="/dashboard" style={styles.link}>
-                Дашборд
-              </Link>
-            )}
-
-            {isAuthenticated && (
-              <button style={styles.logoutButton} onClick={handleLogout}>
-                Вийти
-              </button>
-            )}
-          </div>
-        </div>
-      </nav>
 
       {/* Основний контент */}
       <main style={styles.main}>{children}</main>
@@ -72,82 +15,12 @@ const styles = {
   wrapper: {
     height: '100%',
     width: '100%',
-    background: '#1E1E1E',
+    background: '#111111',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    paddingTop: '20px',
+    paddingTop: '0',
     boxSizing: 'border-box',
-  },
-
-  // Верхня панель
-  nav: {
-    width: '100%',
-    maxWidth: '420px',
-    height: '56px',
-    background: '#111111',
-    borderRadius: '18px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '0 12px',
-    boxSizing: 'border-box',
-    marginBottom: '20px',
-    border: '1px solid #2A2A2A',
-    gap: '10px',
-    overflow: 'hidden',
-  },
-
-  // Назва проєкту
-  brand: {
-    color: '#FFFFFF',
-    fontSize: '15px',
-    fontWeight: '700',
-    flexShrink: 0,
-  },
-
-  // Права частина шапки
-  rightBlock: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    overflowX: 'auto',
-    scrollbarWidth: 'none', // hide scrollbar for firefox
-    msOverflowStyle: 'none', // hide scrollbar for IE
-  },
-
-  // Текст статусу бекенду
-  status: {
-    fontSize: '11px',
-    fontWeight: '500',
-    flexShrink: 0,
-  },
-
-  // Блок з посиланнями
-  links: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-  },
-
-  // Стиль посилань
-  link: {
-    color: '#FFFFFF',
-    textDecoration: 'none',
-    fontSize: '12px',
-    fontWeight: '500',
-    whiteSpace: 'nowrap',
-  },
-
-  // Кнопка виходу
-  logoutButton: {
-    background: '#8B2E2E',
-    color: '#FFFFFF',
-    border: 'none',
-    borderRadius: '10px',
-    padding: '8px 12px',
-    cursor: 'pointer',
-    fontSize: '12px',
   },
 
   // Контент під верхньою панеллю

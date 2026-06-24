@@ -107,7 +107,7 @@ export class TransactionsController {
   @ApiUnauthorizedResponse({ description: 'Токен авторизації невалідний або відсутній' })
   @ApiForbiddenResponse({ description: 'Доступ заборонено' })
   async getMyTransactions(@Request() req: any) {
-    return this.transactionsService.getUserTransactions(req.user.id);
+    return this.transactionsService.getUserTransactions(req.user.userId);
   }
 
   private mapToResponse(result: TransactionResult): TransactionResponseDto {

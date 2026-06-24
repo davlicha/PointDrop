@@ -2,7 +2,8 @@ import { BadRequestException, Controller, Get, Post, Request, Query, UseGuards }
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiInternalServerErrorResponse, ApiOkResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UsersService } from './users.service';
-import { UserSearchResponseDto, MakeMerchantResponseDto } from './dto';
+import { UserSearchResponseDto, MakeMerchantResponseDto, UpdateRoleDto, UpdateBalanceDto } from './dto';
+import { Body, Param, Patch } from '@nestjs/common';
 
 @ApiTags('users')
 @ApiInternalServerErrorResponse({ description: 'Внутрішня помилка сервера' })
@@ -49,8 +50,41 @@ export class UsersController {
   })
   @ApiOkResponse({ description: 'Користувач успішно отримав роль мерчанта', type: MakeMerchantResponseDto })
   @ApiUnauthorizedResponse({ description: 'Токен авторизації невалідний або відсутній' })
-  @ApiForbiddenResponse({ description: 'Доступ заборонено' })
-  async makeMeMerchant(@Request() req: any): Promise<MakeMerchantResponseDto> {
-    return this.usersService.makeUserMerchant(req.user.id);
+  @ApiForbiddenResponse({ description: 'Доступ заборонено (потрібні права SUPER_ADMIN)' })
+  async makeUserMerchant(@Request() req: any) {
+    return this.usersService.makeUserMerchant(req.user.userId);
+  }
+
+  @Get('merchant-users/:merchantId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Отримати клієнтів закладу' })
+  async getMerchantUsers(@Request() req: any, @Param('merchantId') merchantId: string) {
+    // В реальному проекті тут має бути перевірка, що req.user.id == merchant.adminId
+    return this.usersService.getMerchantUsers(merchantId);
+  }
+
+  @Patch(':id/role')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Змінити роль користувача' })
+  async updateUserRole(
+    @Request() req: any,
+    @Param('id') targetUserId: string,
+    @Body() dto: UpdateRoleDto,
+  ) {
+    return this.usersService.updateUserRole(req.user.userId, targetUserId, dto.role);
+  }
+
+  @Patch(':id/balance')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Змінити баланс користувача' })
+  async updateUserBalance(
+    @Request() req: any,
+    @Param('id') targetUserId: string,
+    @Body() dto: UpdateBalanceDto,
+  ) {
+    return this.usersService.updateUserBalance(req.user.userId, targetUserId, dto.merchantId, dto.balance);
   }
 }

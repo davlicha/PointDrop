@@ -135,6 +135,13 @@ export class AuthService {
             cashbackRate: true,
           },
         },
+        employer: {
+          select: {
+            id: true,
+            name: true,
+            cashbackRate: true,
+          },
+        },
       },
     });
 

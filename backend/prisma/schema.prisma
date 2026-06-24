@@ -8,6 +8,7 @@ datasource db {
 
 enum Role {
   CUSTOMER
+  CASHIER
   ADMIN
 }
 
@@ -27,6 +28,8 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
 
   managedMerchants     Merchant[]    @relation("MerchantAdmin")
+  employerId           String?       @map("employer_id") @db.Uuid
+  employer             Merchant?     @relation("MerchantCashiers", fields: [employerId], references: [id], onDelete: SetNull)
   balances             Balance[]
   sentTransactions     Transaction[] @relation("SentTransactions")
   receivedTransactions Transaction[] @relation("ReceivedTransactions")
@@ -43,6 +46,7 @@ model Merchant {
   adminId      String @map("admin_id") @db.Uuid
 
   admin        User          @relation("MerchantAdmin", fields: [adminId], references: [id], onDelete: Restrict)
+  cashiers     User[]        @relation("MerchantCashiers")
   balances     Balance[]
   transactions Transaction[]
 
