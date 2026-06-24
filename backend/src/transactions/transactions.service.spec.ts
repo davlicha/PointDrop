@@ -222,6 +222,11 @@ describe('TransactionsService', () => {
         where: {
           OR: [{ senderId: 'user-123' }, { receiverId: 'user-123' }],
         },
+        include: {
+          sender: { select: { name: true, email: true } },
+          receiver: { select: { name: true, email: true } },
+          merchant: { select: { name: true } },
+        },
         orderBy: { timestamp: 'desc' },
         take: 20,
       });

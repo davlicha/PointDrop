@@ -225,13 +225,18 @@ export class TransactionsService {
         return result;
     }
 
-    async getUserTransactions(userId: string): Promise<Transaction[]> {
+    async getUserTransactions(userId: string): Promise<any[]> {
         return this.prisma.transaction.findMany({
             where: {
                 OR: [
                     { senderId: userId },
                     { receiverId: userId },
                 ],
+            },
+            include: {
+                sender: { select: { name: true, email: true } },
+                receiver: { select: { name: true, email: true } },
+                merchant: { select: { name: true } },
             },
             orderBy: { timestamp: 'desc' },
             take: 20,
